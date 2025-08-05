@@ -1,0 +1,72 @@
+void automation.assigntoEngineersOrFacilities(Int maintenanceId)
+{
+// Fetch Maintenance record
+maintenanceRecord = zoho.crm.getRecordById("Maintenance",maintenanceId);
+if(maintenanceRecord != null && maintenanceRecord.containKey("Account"))
+{
+	accountLookup = maintenanceRecord.get("Account");
+	accountId = ifnull(accountLookup.get("id"),null);
+	if(accountId != null)
+	{
+		// Fetch Account details
+		accountRecord = zoho.crm.getRecordById("Accounts",accountId.toLong());
+		if(accountRecord != null && accountRecord.containKey("Industry"))
+		{
+			industry = accountRecord.get("Industry");
+			updateMap = Map();
+			// Engineering Industries list
+			engineeringIndustries = list();
+			engineeringIndustries.add("Large Enterprise");
+			engineeringIndustries.add("ASP (Application Service Provider)");
+			engineeringIndustries.add("ERP (Enterprise Resource Planning)");
+			engineeringIndustries.add("Small/Medium Enterprise");
+			if(engineeringIndustries.contains(industry))
+			{
+				// If industry is ASP, update Territories field on Account
+				if(industry == "ASP (Application Service Provider)")
+				{
+					territoriesList = list();
+					territoryMap = Map();
+					territoryMap.put("id","<TERRITORY_RECORD_ID>");
+					// Replace with actual Engineering Territory ID
+					territoriesList.add(territoryMap);
+					accountUpdateMap = Map();
+					accountUpdateMap.put("Territories",territoriesList);
+					accountUpdateResp = zoho.crm.updateRecord("Accounts",accountId,accountUpdateMap);
+					info accountUpdateResp;
+				}
+				// Assign to Engineering team
+				updateMap.put("Owner","6822861000000851003");
+				// Engineering team user/group ID
+				updateMap.put("Territory_Name","Engineering");
+				// Custom field on Maintenance
+				info "Assigned to Engineering team.";
+			}
+			else
+			{
+				// Assign to Facilities team
+				updateMap.put("Owner","6822861000000851009");
+				// Facilities team user/group ID
+				updateMap.put("Territory_Name","Facilities");
+				// Custom field on Maintenance
+				info "Assigned to Facilities team.";
+			}
+			// Update Maintenance record with assignment
+			updateResp = zoho.crm.updateRecord("Maintenance",maintenanceId,updateMap);
+			info updateResp;
+		}
+		else
+		{
+			info "Industry not found in Account.";
+		}
+	}
+	else
+	{
+		info "Account ID not found in Maintenance record.";
+	}
+}
+else
+{
+	info "No Account linked to this Maintenance record.";
+}
+}
