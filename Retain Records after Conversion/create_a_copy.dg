@@ -1,0 +1,58 @@
+void automation.Chan_Create_A_Copy_of_Leads(Int leadId)
+{
+//Notes: dire ma proceed an creation han records if the required fields are not define or null..
+//1. Get Lead Details/ Pagkuha han details han leads
+leadDetails = zoho.crm.getRecordById("Leads",leadId);
+info "Lead Details: " + leadDetails;
+if(leadDetails.isEmpty() || leadDetails.get("id") == null)
+{
+	info " Lead record not found for ID: " + leadId;
+	return;
+}
+// 2. Create Account (check mandatory field: Account_Name)
+accountMap = Map();
+accountMap.put("Account_Name",ifnull(leadDetails.get("Company"),"No Company Name"));
+accountResponse = zoho.crm.createRecord("Accounts",accountMap);
+info "Account Creation Response: " + accountResponse;
+if(accountResponse.get("id") == null)
+{
+	info "Failed to create Account. Stopping script.";
+	return;
+}
+// 3. Create Contact (check mandatory fields: Last_Name, Account_Name)
+contactMap = Map();
+contactMap.put("Last_Name",ifnull(leadDetails.get("Last_Name"),"Unknown"));
+contactMap.put("First_Name",ifnull(leadDetails.get("First_Name"),""));
+contactMap.put("Email",leadDetails.get("Email"));
+contactMap.put("Phone",leadDetails.get("Phone"));
+contactMap.put("Account_Name",accountResponse.get("id"));
+contactResponse = zoho.crm.createRecord("Contacts",contactMap);
+info "Contact Creation Response: " + contactResponse;
+if(contactResponse.get("id") == null)
+{
+	info "Failed to create Contact. Stopping script.";
+	return;
+}
+// 4. Create Deal (check mandatory fields: Deal_Name, Stage)
+dealMap = Map();
+dealMap.put("Deal_Name",ifnull(leadDetails.get("Company"),"No Company") + " - New Deal");
+dealMap.put("Stage","Qualification");
+// Change based on your CRM pipeline
+dealMap.put("Account_Name",accountResponse.get("id"));
+dealMap.put("Contact_Name",contactResponse.get("id"));
+dealResponse = zoho.crm.createRecord("Deals",dealMap);
+info "Deal Creation Response: " + dealResponse;
+if(dealResponse.get("id") == null)
+{
+	info "Failed to create Deal. Stopping script.";
+	return;
+}
+// 5. Update Lead to link new records
+updateLeadMap = Map();
+updateLeadMap.put("Account_Link",accountResponse.get("id"));
+updateLeadMap.put("Contact_Link",contactResponse.get("id"));
+updateLeadMap.put("Deal_Link",dealResponse.get("id"));
+updateResponse = zoho.crm.updateRecord("Leads",leadId,updateLeadMap);
+info "Lead Update Response: " + updateResponse;
+info " Automation completed successfully for Lead ID: " + leadId;
+}
