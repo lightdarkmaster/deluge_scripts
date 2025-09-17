@@ -1,0 +1,23 @@
+map validation_rule.validation_field1(String crmAPIRequest)
+{
+	entityMap = crmAPIRequest.toMap().get("record");
+	if(entityMap == null)
+	{
+		return {'status':'error','message':'Record is required.'};
+	}
+	
+	mobile = entityMap.get("Mobile_Phone");
+	if(mobile == null)
+	{
+		return {'status':'error','message':'Mobile Phone number is required.'};
+	}
+	
+	String mobileStr = mobile.toString();
+	if(!mobileStr.matches("^\\d{1,11}$"))
+	{
+		return {'status':'error','message':'Mobile Phone Number should only contain numbers and should not exceed by 11 digits.'};
+	}
+	
+	return {'status':'success'};
+}
+
