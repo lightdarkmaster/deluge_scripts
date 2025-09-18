@@ -1,6 +1,8 @@
 void automation.assigntoEngineersOrFacilities(Int maintenanceId)
 {
 // Fetch Maintenance record
+
+//Assuming that there is a engineering territories and facilities territory..
 maintenanceRecord = zoho.crm.getRecordById("Maintenance",maintenanceId);
 if(maintenanceRecord != null && maintenanceRecord.containKey("Account"))
 {
