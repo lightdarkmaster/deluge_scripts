@@ -1,0 +1,18 @@
+void automation.getLeadGeneratedRecords()
+{
+	// Get all records from leads module
+ recordsResponse = zoho.crm.getRecords("Leads", null, null, null, null, null, null, null, null, null, null, null, null);
+	info recordsResponse;
+	if(recordsResponse.get("code") != "SUCCESS")
+	{
+		info "Failed to get records from leads module. Reason: " + recordsResponse.get("message");
+		return;
+	}
+	records = recordsResponse.get("data");
+	info records;
+	foreach(record in records)
+	{
+		leadGeneratedRecords = zoho.crm.getRelatedRecords("Leads",record.get("id"),null,null,null,null,null,null,null,null,null,null,null,null);
+		info "Lead Generated Records for Lead ID: " + record.get("id") + " - " + leadGeneratedRecords.toString();
+	}
+}
