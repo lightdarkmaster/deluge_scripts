@@ -1,0 +1,28 @@
+void automation.createNewRecordToMaintenanceModule(Int dealId)
+{
+	try 
+	{
+		// Get Deal record
+		dealRecord = zoho.crm.getRecordById("Deals",dealId);
+		if(dealRecord != null)
+		{
+			// Prepare Maintenance record
+			maintenance = Map();
+			maintenance.put("Deal",{"id":dealId});
+			maintenance.put("Account",dealRecord.get("Account_Name"));
+			maintenance.put("Contact",dealRecord.get("Contact_Name"));
+			maintenance.put("Warranty_Start_Date",zoho.currentdate);
+			maintenance.put("Warranty_End_Date",zoho.currentdate.addYear(1));
+			// Create Maintenance record
+			createResp = zoho.crm.createRecord("Maintenance",maintenance);
+			info "Maintenance record creation response: " + createResp.toString();
+		}
+		else
+		{
+			info "Deal record not found for ID: " + dealId;
+		}
+	}
+	catch (ex)
+	{
+		info "Error occurred: " + ex.toString();
+	}
