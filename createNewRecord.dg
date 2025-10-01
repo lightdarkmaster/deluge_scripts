@@ -26,3 +26,4 @@ void automation.createNewRecordToMaintenanceModule(Int dealId)
 	{
 		info "Error occurred: " + ex.toString();
 	}
+}
