@@ -1,0 +1,32 @@
+map validation_rule.validation_field(String crmAPIRequest)
+{
+entityMap = crmAPIRequest.toMap().get("record");
+mobile = entityMap.get("Contact_Number");
+response = Map();
+if(mobile != null)
+{
+	if(!mobile.matches("^[0-9]+$"))
+	{
+		// Contains non-digit characters
+		response.put('status','error');
+		response.put('message',"Mobile Phone number should only contain digits.");
+	}
+	else if(mobile.length() != 11)
+	{
+		// Check length after ensuring it's all digits
+		response.put('status','error');
+		response.put('message','Mobile Phone Number should be exactly 11 digits.');
+	}
+	else
+	{
+		// Valid
+		response.put('status','success');
+	}
+}
+else
+{
+	response.put('status','error');
+	response.put('message','Mobile Phone number is required.');
+}
+return response;
+}
