@@ -22,3 +22,15 @@ const data = {
 }
 
 console.log(createRecord("Tickets", data));
+
+createRecord("Maintenance", {
+    "Subject": "Test Maintenance",
+    "Status": "Open",
+    "Priority": "Normal",
+    "Description": "Test Maintenance",
+    "Category": "Test Category",
+
+    "Account": {
+        "id": "123456789"
+    }
+});
