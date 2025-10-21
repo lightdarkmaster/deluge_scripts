@@ -1,3 +1,8 @@
+/**
+ * Retrieves all records from Leads module and gets related records for each lead.
+ * 
+ * @return None
+ */
 void automation.getLeadGeneratedRecords()
 {
 	// Get all records from leads module
@@ -12,7 +17,9 @@ void automation.getLeadGeneratedRecords()
 	info records;
 	foreach(record in records)
 	{
+		// Get related records for each lead
 		leadGeneratedRecords = zoho.crm.getRelatedRecords("Leads",record.get("id"),null,null,null,null,null,null,null,null,null,null,null,null);
 		info "Lead Generated Records for Lead ID: " + record.get("id") + " - " + leadGeneratedRecords.toString();
 	}
 }
+
