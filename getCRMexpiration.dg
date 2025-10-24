@@ -1,0 +1,36 @@
+// Deluge: get org license expiry
+response = invokeurl
+[
+    url: "https://www.zohoapis.com/crm/v8/org"
+    type: GET
+    connection: "crm_oauth_connection" // <- change if your connection name is different
+];
+
+info response; // optional - inspect raw response
+
+// navigate the JSON to the paid expiry
+orgList = response.get("org");
+if(orgList != null && orgList.size() > 0)
+{
+    orgObj = orgList.get(0);
+    license = orgObj.get("license_details");
+    if(license != null)
+    {
+        paidExpiryStr = license.get("paid_expiry");  // e.g. "2025-04-11T17:00:00-07:00"
+        trialExpiryStr = license.get("trial_expiry"); // if applicable
+
+        info "paid_expiry (raw): " + paidExpiryStr;
+
+        // Convert to a Deluge date/time value
+        if(paidExpiryStr != null)
+        {
+            paidExpiryDate = toDate(paidExpiryStr);
+            info "paid_expiry (toDate): " + paidExpiryDate;
+            // you can now compare dates, format, store, or send notifications
+        }
+    }
+}
+else
+{
+    info "No org information returned.";
+}
