@@ -1,9 +1,9 @@
 // Deluge: get org license expiry
 response = invokeurl
 [
-    url: "https://www.zohoapis.com/crm/v8/org"
-    type: GET
-    connection: "crm_oauth_connection" // <- change if your connection name is different
+    url: "https://www.zohoapis.com/crm/private/v8/org",
+    type: GET,
+    connection: "crm_oauth_connection"
 ];
 
 info response; // optional - inspect raw response
@@ -34,3 +34,4 @@ else
 {
     info "No org information returned.";
 }
+
