@@ -20,6 +20,10 @@ The functions are categorized based on their purpose and are listed below:
 
 * `create_maintenance_record`: This function creates a maintenance record for a given deal. It takes the deal ID as an argument and returns the ID of the newly created maintenance record.
 
+## Purpose
+
+The functions in this repository were created to automate specific tasks in Zoho CRM. They are designed to be used in specific scenarios only and should not be used without proper understanding of their purpose.
+
 ## Disclaimer
 
 The creator of this repository is not responsible for any damage or loss caused by the use of these functions. Use at your own risk.
