@@ -1,0 +1,66 @@
+void automation.TestingPurpose(Int leadID)
+{
+try 
+{
+	info "=== Starting Lead Status Processing ===";
+	lead = zoho.crm.getRecordById("Leads",leadID);
+	if(lead == null)
+	{
+		info "Lead not found";
+		return;
+	}
+	status = ifnull(lead.get("Lead_Status"),"");
+	email = ifnull(lead.get("Email"),"");
+	owner = lead.get("Owner");
+	ownerEmail = ifnull(owner.get("email"),"");
+	info "Current Status: " + status;
+	info "Owner Email: " + ownerEmail;
+	if(status == "")
+	{
+		info "There is no status on this lead.";
+	}
+	else if(status == "Qualified" || status == "Negotiation")
+	{
+		// Only status from these stages can transition to Close Won
+		updatedMap = {"Lead_Status":"Close Won"};
+		updateResponse = zoho.crm.updateRecord("Leads",leadID,updatedMap);
+		info "Lead Status Updated: ";
+		info updateResponse;
+		// pag add hin notes
+		noteMap = Map();
+		noteMap.put("Note_Title","Status Update");
+		noteMap.put("Note_Content","Lead moved to Close Won through automation.");
+		addNoteResp = zoho.crm.createRecord("Notes",{"Parent_Id":leadID,"se_module":"Leads"});
+		info "Note Added: " + addNoteResp;
+		// Pag send hin notif ha owner
+		if(ownerEmail != "")
+		{
+			sendmail
+			[
+				from :zoho.adminuserid
+				to :ownerEmail
+				subject :"Lead Moved to Close Won"
+				message :"The Lead " + leadID + " has been moved to Close Won."
+			]
+			info "Email Notification Sent.";
+		}
+		// Kun it lead mayda related deal, ig uupdate it deal gihap
+		dealID = lead.get("Deal_Name");
+		if(dealID != null)
+		{
+			dealUpdateMap = {"Stage":"Closed Won"};
+			dealUpdateResp = zoho.crm.updateRecord("Deals",dealID.toLong(),dealUpdateMap);
+			info "Related Deal Updated: " + dealUpdateResp;
+		}
+	}
+	else
+	{
+		info "Lead not in a valid stage to be Closed Won.";
+	}
+	info "=== Process Complete ===";
+}
+catch (e)
+{
+	info "Error Occurred: " + e.toString();
+}
+}
