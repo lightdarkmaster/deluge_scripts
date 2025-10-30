@@ -1,0 +1,35 @@
+map validation_rule.Validate_Phone_Number1(String crmAPIRequest)
+{
+entityMap = crmAPIRequest.toMap().get("record");
+mobile = entityMap.get("Phone");
+response = Map();
+if(mobile != null)
+{
+	// Allow digits, parentheses, plus sign, and hyphen
+	if(!mobile.matches("^[0-9( )+#\\s-]+$"))
+	{
+		response.put('status','error');
+		response.put('message',"Mobile phone number should only contain digits, parentheses ( ), plus sign (+), and hyphen (-).");
+	}
+	else
+	{
+		// Remove all non-digit characters for digit count validation
+		clean_mobile = mobile.replaceAll("[^0-9]","");
+		if(clean_mobile.length() < 5 || clean_mobile.length() > 20)
+		{
+			response.put('status','error');
+			response.put('message',"Mobile phone number should contain between 5 and 20 digits (excluding symbols).");
+		}
+		else
+		{
+			response.put('status','success');
+		}
+	}
+}
+else
+{
+	response.put('status','error');
+	response.put('message','Mobile phone number is required.');
+}
+return response;
+}

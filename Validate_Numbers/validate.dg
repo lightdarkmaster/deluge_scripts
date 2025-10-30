@@ -24,10 +24,10 @@ map validation_rule.validation_field1(String crmAPIRequest)
 	
 	String mobileStr = mobile.toString();
 	
-	if(!mobileStr.matches("^\\d{1,11}$"))
+	if(!mobileStr.matches("^\\d{5,11}$"))
 	{
-		// Mobile Phone number should only contain numbers and should not exceed by 11 digits.
-		return {'status':'error','message':'Mobile Phone Number should only contain numbers and should not exceed by 11 digits.'};
+		// Mobile Phone number should only contain numbers and should not be less than 5 digits.
+		return {'status':'error','message':'Mobile Phone Number should only contain numbers and should not be less than 5 digits.'};
 	}
 	
 	return {'status':'success'};
