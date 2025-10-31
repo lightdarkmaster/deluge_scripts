@@ -1,8 +1,4 @@
-/**
- * Retrieves all records from Leads module and gets related records for each lead.
- * 
- * @return None
- */
+
 void automation.getLeadGeneratedRecords()
 {
 	// Get all records from leads module
