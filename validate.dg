@@ -1,25 +1,35 @@
+/**
+ * Validates Mobile Phone number in CRM API request.
+ * 
+ * @param crmAPIRequest CRM API request object
+ * @return Map with status and message
+ */
 map validation_rule.validate_field1(String crmAPIRequest){
     
+    // Get the record from the CRM API request
     entityMap = crmAPIRequest.toMap().get("record");
 
+    // Check if record is null
     if(entityMap == null){
-        return{'status': 'error','message': 'Record is Required.'};
+        return {'status': 'error','message': 'Record is Required.'};
     }
 
+    // Get the Mobile Phone number from the record
     mobile = entityMap.get("Mobile_Phone");
 
+    // Check if Mobile Phone number is null
     if(mobile == null){
         return {'status': 'error','message': 'Mobile Phone Number is required.'};
     }
 
+    // Convert Mobile Phone number to string
     String mobileStr = mobile.toString();
 
+    // Check if Mobile Phone number matches the regex pattern
     if(!mobileStr.matches("^\\d{1,11}$")){
         return {'status':'error','message':'Mobile Phone Number should only contain numbers and should not exceed 11 digits'};
     }
 
+    // Return success status
     return {'status':'success'};
-    
-    info mobile;
-    info mobileStr;
 }
