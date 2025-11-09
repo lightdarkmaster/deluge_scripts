@@ -2,6 +2,7 @@
 // Single-file collection of advanced algorithms and demo harness.
 // Compile: javac AdvancedAlgorithms.java
 // Run:     java AdvancedAlgorithms
+// by: Christian Barbosa
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
