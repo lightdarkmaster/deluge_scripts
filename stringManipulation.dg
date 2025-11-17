@@ -1,0 +1,8 @@
+// Type Here
+time = "16-11-2025T23:39:28+11:00";
+time = time.getPrefix("+");
+time = time.replaceAll("T", " ");
+time = time.addMinutes(2);
+time = time.addMinutes.toString("dd-MM-yyyy'T'HH:mm:ss");
+time = time + "+11:00";
+INFO time;

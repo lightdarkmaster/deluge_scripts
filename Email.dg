@@ -1,0 +1,45 @@
+void automation.Email_Notif_For_Final_Results(int internal_bidding_id)
+{
+	internal_bidding_id = input.internal_bidding_id;
+	internalBidding = zoho.crm.getRecordById("Internal_Bidding", internal_bidding_id);
+
+	committeeVotes = zoho.crm.getRelatedRecords("Committee_Vote", "Internal_Bidding", internal_bidding_id);
+
+	committee_emails = List();
+
+	for each voteRec in committeeVotes
+	{
+		committeeMember = voteRec.get("Committee_Member");
+
+		if(committeeMember != null)
+		{
+			email = committeeMember.get("Email");
+			if(email != null)
+			{
+				committee_emails.add(email);
+			}
+		}
+	}
+
+	committee_emails = committee_emails.distinct();
+	committee_emails.remove(null);
+
+	if(committee_emails.isEmpty())
+	{
+		info "No committee emails found. Aborting.";
+		return;
+	}
+
+	sendmail
+	[
+		from: "noreply@yourcompany.com"
+		to: committee_emails
+		subject: "Final Voting Results for Internal Bidding"
+		message: "All votes have been cast.<br><br>Please review the results in the Internal Bidding record."
+	];
+
+	feedData = Map();
+	feedData.put("text","Voting Completed. Final Results Available.");
+	zoho.crm.createRecord("Feeds", feedData);
+}
+
