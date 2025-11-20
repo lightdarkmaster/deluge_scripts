@@ -1,0 +1,11 @@
+string standalone.TestFunction()
+{
+sampleInvoke = invokeurl
+[
+	url :"https://salesiq.zoho.com/api/v2/dmcihomes5226/conversations/1013795000000400231"
+	type :GET
+	connection:"sales_conn"
+];
+info sampleInvoke;
+return "";
+}

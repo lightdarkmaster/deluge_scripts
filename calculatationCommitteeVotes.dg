@@ -170,3 +170,96 @@ for each  recording in recording
 }
 repondents = zoho.crm.updateRecord("Internal_Bidding",internalBid,datamaps,{"trigger":{"workflow"}});
 }
+
+
+
+
+
+
+///Another terms
+
+
+string standalone.SalesIQWebhook(zoho.crmAPIRequest)
+{
+    if(input == null)
+    {
+        return "No webhook payload received.";
+    }
+
+    info input;
+
+    // --- Pull data directly from SalesIQ webhook ---
+    conversationId = input.get("conversation_id");
+    visitorEmail = input.get("visitor_email");
+    operatorEmail = input.get("operator_email");
+
+    // --- If conversation ID is present, fetch full conversation details from SalesIQ ---
+    if(conversationId != null)
+    {
+        salesIQData = invokeurl
+        [
+            url: "https://salesiq.zoho.com/api/v2/<PORTAL_NAME>/conversations/" + conversationId
+            type: GET
+            connection: "salesiq_conn"
+        ];
+
+        info salesIQData;
+
+        if(salesIQData != null && salesIQData.get("data") != null)
+        {
+            // Extract emails from conversation if webhook did not send them
+            convAttender = salesIQData.get("data").get("attender");
+            convVisitor = salesIQData.get("data").get("visitor");
+
+            if(operatorEmail == null && convAttender != null)
+            {
+                operatorEmail = convAttender.get("email");
+            }
+            if(visitorEmail == null && convVisitor != null)
+            {
+                visitorEmail = convVisitor.get("email");
+            }
+        }
+    }
+
+    // Validate required fields
+    if(visitorEmail == null)
+    {
+        return "Missing visitor email. Cannot find matching lead.";
+    }
+    if(operatorEmail == null)
+    {
+        return "Missing operator email. Cannot assign owner.";
+    }
+
+    // === 1. Search Lead by visitor email ===
+    leadSearch = zoho.crm.searchRecords("Leads", "(Email:equals:" + visitorEmail + ")");
+
+    if(leadSearch == null || leadSearch.isEmpty())
+    {
+        return "No lead found for visitor email: " + visitorEmail;
+    }
+
+    lead = leadSearch.get(0);
+    leadId = lead.get("id");
+
+    // === 2. Find CRM user corresponding to operator email ===
+    crmUserSearch = zoho.crm.searchRecords("users", "(email:equals:" + operatorEmail + ")");
+
+    if(crmUserSearch == null || crmUserSearch.isEmpty())
+    {
+        return "CRM user not found for operator email: " + operatorEmail;
+    }
+
+    ownerId = crmUserSearch.get(0).get("id");
+
+    // === 3. Update the Lead Owner in CRM ===
+    updateMap = Map();
+    updateMap.put("Owner", {"id": ownerId});
+
+    updateResp = zoho.crm.updateRecord("Leads", leadId, updateMap);
+
+    info updateResp;
+
+    return "Lead owner updated to SalesIQ operator (" + operatorEmail + ")";
+}

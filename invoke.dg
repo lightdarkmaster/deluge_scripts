@@ -1,0 +1,138 @@
+string standalone.TestFunction()
+{
+    try 
+    {
+        // Get conversation data from SalesIQ
+        sampleInvoke = invokeurl
+        [
+            url: "https://salesiq.zoho.com/api/v2/dmcihomes5226/conversations/1013795000000400231"
+            type: GET
+            connection: "sales_conn"
+        ];
+        
+        info "SalesIQ Response: " + sampleInvoke;
+        
+        // Extract the source value
+        conversationData = sampleInvoke.get("data");
+        visitor = conversationData.get("visitor");
+        channelDetails = visitor.get("channel_details");
+        source = channelDetails.get("source");
+        
+        info "Extracted Source: " + source;
+        // Source value will be: "DMCI Homes PAU Digital Sales"
+        
+        // Get the lead ID (you'll need to search for the lead or pass it as parameter)
+        // Method 1: If you have the lead email or phone
+        visitorName = visitor.get("name");
+        
+        // Search for the lead in CRM
+        searchResponse = zoho.crm.searchRecords("Leads", "(Last_Name:equals:" + visitorName + ")");
+        
+        if(searchResponse.size() > 0)
+        {
+            leadRecord = searchResponse.get(0);
+            leadId = leadRecord.get("id");
+            
+            info "Found Lead ID: " + leadId;
+            
+            // Update the Lead Source field
+            updateMap = Map();
+            updateMap.put("Lead_Source", source);
+            
+            updateResponse = zoho.crm.updateRecord("Leads", leadId, updateMap);
+            
+            info "Update Response: " + updateResponse;
+            
+            return "Success: Lead Source updated to '" + source + "' for Lead: " + visitorName;
+        }
+        else
+        {
+            info "No lead found with name: " + visitorName;
+            return "Error: Lead not found";
+        }
+    }
+    catch (e)
+    {
+        info "Error: " + e;
+        return "Error: " + e.toString();
+    }
+}
+
+// // Alternative version: Pass Lead ID as parameter
+string standalone.UpdateLeadSourceById(string leadId)
+{
+    try 
+    {
+        // Get conversation data from SalesIQ
+        sampleInvoke = invokeurl
+        [
+            url: "https://salesiq.zoho.com/api/v2/dmcihomes5226/conversations/1013795000000400231"
+            type: GET
+            connection: "sales_conn"
+        ];
+        
+        // Extract the source value
+        source = sampleInvoke.get("data").get("visitor").get("channel_details").get("source");
+        
+        info "Source to update: " + source;
+        
+        // Update the Lead Source field
+        updateMap = Map();
+        updateMap.put("Lead_Source", source);
+        
+        updateResponse = zoho.crm.updateRecord("Leads", leadId, updateMap);
+        
+        info "Update Response: " + updateResponse;
+        
+        return "Success: Lead Source updated to '" + source + "'";
+    }
+    catch (e)
+    {
+        info "Error: " + e;
+        return "Error: " + e.toString();
+    }
+}
+
+// Most flexible version: Pass both conversation ID and lead ID
+string standalone.UpdateLeadSource(string conversationId, string leadId)
+{
+    try 
+    {
+        // Get conversation data from SalesIQ
+        apiUrl = "https://salesiq.zoho.com/api/v2/dmcihomes5226/conversations/" + conversationId;
+        
+        sampleInvoke = invokeurl
+        [
+            url: apiUrl
+            type: GET
+            connection: "sales_conn"
+        ];
+        
+        // Extract the source value
+        source = sampleInvoke.get("data").get("visitor").get("channel_details").get("source");
+        
+        info "Conversation ID: " + conversationId;
+        info "Lead ID: " + leadId;
+        info "Source: " + source;
+        
+        // Update the Lead Source field in CRM
+        updateMap = Map();
+        updateMap.put("Lead_Source", source);
+        
+        updateResponse = zoho.crm.updateRecord("Leads", leadId, updateMap);
+        
+        if(updateResponse.get("code") == "SUCCESS")
+        {
+            return "Success: Lead Source updated to '" + source + "' for Lead ID: " + leadId;
+        }
+        else
+        {
+            return "Error: " + updateResponse.toString();
+        }
+    }
+    catch (e)
+    {
+        info "Error: " + e;
+        return "Error: " + e.toString();
+    }
+}
