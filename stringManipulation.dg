@@ -5,7 +5,8 @@ time = time.replaceAll("T", " ");
 time = time.addMinutes(2);
 time = time.addMinutes.toString("dd-MM-yyyy'T'HH:mm:ss");
 time = time + "+11:00";
-INFO time;
+// INFO time;
+info time;
 
 
 //TODO: Create a mapping for parameter source..
