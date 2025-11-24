@@ -1,0 +1,172 @@
+void automation.calculation_of_committee_votes(String ID)
+{
+voteid = zoho.crm.getRecordById("Bid_Committee_Votes",ID);
+info voteid;
+internalBid = voteid.get("Internal_Bidding").get("id");
+projectN = voteid.get("Project_Name");
+projectNn = voteid.get("Project_Name").get("name");
+info projectN;
+projectid = voteid.get("Project_Name").get("id");
+opprecord = zoho.crm.getRecordById("Deals",projectid);
+budget = opprecord.get("Project_Budget");
+techhouse = opprecord.get("TECH_HOUSE_INVOLVED");
+info techhouse;
+accountM = opprecord.get("Name_of_Sales_Account_Manager").get("id");
+employeerecord = zoho.crm.getRecordById("Employees_List",accountM);
+employemail = employeerecord.get("Email_Address");
+info budget;
+moduleName = "Bid_Committee_Votes";
+// Change to your module, e.g., "Contacts", "Deals" 
+// get currency type
+currency = opprecord.get("Currency");
+exchange = opprecord.get("Exchange_Rate");
+Convertbudget = budget;
+if(currency == "USD")
+{
+	Convertbudget = budget / exchange;
+}
+info Convertbudget;
+// Get input from user
+record = zoho.crm.getRelatedRecords("Committe_Votes","Internal_Bidding",internalBid);
+info record;
+goVoteCount = 0;
+// Variable to count votes of "go"
+nogovotecount = 0;
+Abstainvotes = 0;
+Total_votes = 0;
+votesneed = 0;
+if(Convertbudget >= 50000000)
+{
+	votesneed = 12;
+	techhouse = opprecord.get("TECH_HOUSE_INVOLVED");
+	if(techhouse == "ICT and digitalization")
+	{
+		votesneed = votesneed + 1;
+	}
+	if(techhouse == "Facilities solutions" || techhouse == "Passive component unit" || techhouse == "Product support unit" || techhouse == "Transportation law enforcement and defense" || techhouse == "Transport network" || techhouse == "Wireless access" || techhouse == "Network operation center")
+	{
+		votesneed = votesneed + 1;
+	}
+}
+else if(Convertbudget < 50000000)
+{
+	votesneed = 11;
+}
+info "votesneed" + votesneed;
+opplink = "crm.zoho.com/crm/org873075120/tab/CustomModule8/create?layoutId=6540201000000931234&redirect=false";
+// // insert this in for each
+// committe = voteid.get("Name_of_Committee_Member").get("id");
+// getuser = zoho.crm.getRecordById("Employees_List", committe);
+// head = getuser.get("Immediate_Head").get("id");
+// id_users = zoho.crm.searchRecords("users", "(id:equals:"+head +")");
+// user = id_users.get("users");
+// userdetail = user.get(0);
+// user_email = userdetail.get("email");
+// info user_email ;
+email_list = List();
+// 
+for each  records in record
+{
+	retrievedName = records.get("Project_Name").get("id");
+	retrivevote = records.get("Vote");
+	if(retrievedName == projectid)
+	{
+		retriveid = records.get("id");
+		recordwell = zoho.crm.getRecordById("Bid_Committee_Votes",retriveid);
+		committe = recordwell.get("Name_of_Committee_Member").get("id");
+		getuser = zoho.crm.getRecordById("Employees_List",committe);
+		head = getuser.get("Email_Address");
+		email_list.add(head);
+		info "Matching record found: " + retrievedName;
+		if(retrivevote == "Go")
+		{
+			goVoteCount = goVoteCount + 1;
+			Total_votes = Total_votes + 1;
+		}
+		else if(retrivevote == "No Go")
+		{
+			nogovotecount = nogovotecount + 1;
+			Total_votes = Total_votes + 1;
+		}
+		else if(retrivevote == "Abstain")
+		{
+			Total_votes = Total_votes + 1;
+			Abstainvotes = Abstainvotes + 1;
+		}
+	}
+	else
+	{
+		info "norecord found";
+	}
+}
+info email_list;
+info "Total 'Go' votes: " + goVoteCount;
+info "Total No go votes: " + nogovotecount;
+info "Total votes " + Total_votes;
+scoretotal = goVoteCount - nogovotecount - Abstainvotes;
+info scoretotal;
+finalgo = "GO";
+finalNo = "NO GO";
+internal = zoho.crm.getRecordById("Internal_Bidding",internalBid);
+datamaps = Map();
+internalmap = Map();
+if(Total_votes == votesneed)
+{
+	if(scoretotal >= 5)
+	{
+		datamaps.put("Final_Decision","Go");
+		datamaps.put("Votes_Tied",false);
+		datamaps.put("Total_govote",goVoteCount);
+		datamaps.put("Total_novote",nogovotecount);
+		datamaps.put("Total_abstain",Abstainvotes);
+		reponded = zoho.crm.updateRecord("Internal_Bidding",internalBid,datamaps,{"trigger":{"workflow"}});
+	}
+	if(scoretotal < 5)
+	{
+		datamaps.put("Final_Decision","No Go");
+		datamaps.put("Votes_Tied",false);
+		datamaps.put("Total_govote",goVoteCount);
+		datamaps.put("Total_novote",nogovotecount);
+		datamaps.put("Total_abstain",Abstainvotes);
+		responseble = zoho.crm.updateRecord("Internal_Bidding",internalBid,datamaps,{"trigger":{"workflow"}});
+	}
+	if(scoretotal == 0)
+	{
+		datamaps.put("Final_Decision"," ");
+		datamaps.put("Votes_Tied",true);
+		datamaps.put("Total_govote",goVoteCount);
+		datamaps.put("Total_novote",nogovotecount);
+		datamaps.put("Total_abstain",Abstainvotes);
+		responseble = zoho.crm.updateRecord("Internal_Bidding",internalBid,datamaps,{"trigger":{"workflow"}});
+	}
+}
+else
+{
+	info "not enough votes";
+	repondet = zoho.crm.updateRecord("Bid_Committee_Votes",ID,datamaps);
+}
+datamaps.put("Total_Score",scoretotal);
+responseble = zoho.crm.updateRecord("Internal_Bidding",internalBid,datamaps,{"trigger":{"workflow"}});
+Templateid = "6540201000001594183";
+recording = zoho.crm.getRelatedRecords("Committe_Votes","Internal_Bidding",internalBid);
+for each  recording in recording
+{
+	pName = recording.get("Project_Name");
+	bvote = recording.get("Vote");
+	bidid = recording.get("id");
+	bidmaps = Map();
+	if(scoretotal >= 5)
+	{
+		datamaps.put("Final_Decisionv2","Go");
+		datamaps.put("Total_Score_s",scoretotal);
+		repondet = zoho.crm.updateRecord("Bid_Committee_Votes",bidid,datamaps);
+	}
+	else if(scoretotal < 5)
+	{
+		datamaps.put("Final_Decisionv2","No Go");
+		datamaps.put("Total_Score_s",scoretotal);
+		repondet = zoho.crm.updateRecord("Bid_Committee_Votes",bidid,datamaps);
+	}
+}
+repondents = zoho.crm.updateRecord("Internal_Bidding",internalBid,datamaps,{"trigger":{"workflow"}});
+}
