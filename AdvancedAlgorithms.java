@@ -248,9 +248,9 @@ public class AdvancedAlgorithms {
     }
 
     // ---------------------------
-    // Suffix Array (doubling) + LCP construction (Kasai)
+    // Suffix Array (doubling) + LCP construction (Kasai) advance logic
     // ---------------------------
-    static class SuffixArray {
+    static final class SuffixArray {
 
         int[] sa;
         int[] lcp;
