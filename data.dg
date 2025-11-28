@@ -1,0 +1,11 @@
+void automation.getGP1(Int recordID,Int projectName)
+{
+relatedListfromOpp = zoho.crm.getRelatedRecords("Price_proposal","Deals",projectName);
+priceproposalID = relatedListfromOpp.get(0).get("id");
+priceproposal = zoho.crm.getRecordById("Price_proposal",priceproposalID);
+gp = priceproposal.get("age_GROSS_PROFIT");
+if(!gp < 0)
+{
+	info zoho.crm.updateRecord("Commercial_Task_Ticket",recordID,{"GP":gp});
+}
+}
