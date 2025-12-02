@@ -1,0 +1,533 @@
+string button.sendEmailNotificationToBidCommitteeMembers(String internalBiddingID)
+{
+/* ---------------------------------------------------------------------------------------------- */
+// Global Variables
+recordData = zoho.crm.getRecordById("Internal_Bidding",internalBiddingID);
+projectId = recordData.get("Project_Name").get("id");
+committeeMembers = List();
+committeeMembersSubformData = List();
+voteRecords = List();
+isNotComplete = false;
+isNotPresentHead = false;
+// Pull Project data
+projectData = zoho.crm.getRecordById("Deals",projectId);
+projectOwnerId = projectData.get("Owner");
+projectBudget = projectData.get("Project_Budget");
+techHouse = projectData.get("TECH_HOUSE_INVOLVED");
+// Pull Account Manager data
+accountManagerId = projectData.get("Name_of_Sales_Account_Manager").get("id");
+accountManagerData = zoho.crm.getRecordById("Employees_List",accountManagerId);
+// Pull Account Manager Immediate Head
+if(accountManagerData.get("Immediate_Head") != null)
+{
+	immediateHeadId = accountManagerData.get("Immediate_Head").get("id");
+	immediateHeadData = zoho.crm.getRecordById("users",immediateHeadId);
+	immediateHeadEmail = immediateHeadData.get("users").get(0).get("email");
+}
+else
+{
+	isNotPresentHead = true;
+}
+// Pull Solution Architect
+solutionArchitectId = projectData.get("Name_of_Solutions_Architect").get("id");
+solutionArchitectData = zoho.crm.getRecordById("Employees_List",solutionArchitectId);
+solutionArchitectEmail = solutionArchitectData.get("Email_Address");
+// Pull Technical Personnel - Technical House
+technicalPersonnelId = projectData.get("Assigned_Technical_Personnel").get("id");
+technicalPersonnelData = zoho.crm.getRecordById("Employees_List",technicalPersonnelId);
+technicalPersonnelEmail = technicalPersonnelData.get("Email_Address");
+// Pull Technical Engr. - Project Management
+technicalEngrId = projectData.get("Name_of_Technical_lead").get("id");
+technicalEngrData = zoho.crm.getRecordById("Employees_List",technicalEngrId);
+technicalEngrEmail = technicalEngrData.get("Email_Address");
+// Pull Bid Auditor Incharge
+bidAuditorId = projectData.get("Bid_auditor").get("id");
+bidAuditorData = zoho.crm.getRecordById("Employees_List",bidAuditorId);
+bidAuditorEmail = bidAuditorData.get("Email_Address");
+// Pull Users
+getUsers = zoho.crm.getRecords("users",1,200);
+/* ---------------------------------------------------------------------------------------------- */
+// Validate Project Budget
+// .. Greater OR equals to 50M
+if(projectBudget >= 50000000)
+{
+	info "Project Budget : more than 50M";
+	// Validation to check if tech house involves
+	// .. ICT and Digitalization
+	includeCTO = false;
+	includeCIO = false;
+	addedCTO = false;
+	addedCIO = false;
+	if(techHouse != null)
+	{
+		if(techHouse.size() > 1 && techHouse.containsIgnoreCase("ICT and digitalization"))
+		{
+			includeCIO = true;
+			includeCTO = true;
+		}
+		else if(techHouse.containsIgnoreCase("ICT and digitalization"))
+		{
+			includeCIO = true;
+		}
+		else if(!techHouse.containsIgnoreCase("ICT and digitalization"))
+		{
+			includeCTO = true;
+		}
+	}
+	for each  user in getUsers.get("users")
+	{
+		if(user.get("status").equalsIgnoreCase("active"))
+		{
+			info user.get("full_name") + " is active.";
+			userRole = user.get("role").get("name");
+			userId = user.get("id");
+			userEmail = user.get("email");
+			committeeMemberData = Map();
+			// Additional Committee Members
+			if(includeCIO == true && addedCTO == false)
+			{
+				if(userRole == "Chief Information Officer")
+				{
+					addedCTO = true;
+					committeeMemberData.put("email",userEmail);
+					committeeMemberData.put("role","EXECUTIVE - TECHNOLOGY HOUSE");
+					committeeMemberData.put("position","CIO");
+					committeeMembers.add(committeeMemberData);
+				}
+			}
+			if(includeCTO == true && addedCIO == false)
+			{
+				if(userRole == "Chief Technical Officer")
+				{
+					addedCIO = true;
+					committeeMemberData.put("email",userEmail);
+					committeeMemberData.put("role","EXECUTIVE - TECHNOLOGY HOUSE");
+					committeeMemberData.put("position","CTO");
+					committeeMembers.add(committeeMemberData);
+				}
+			}
+			else if(userRole == "SVPO - Project Delivery")
+			{
+				committeeMemberData.put("email",userEmail);
+				committeeMemberData.put("role","EXECUTIVE - PROJECT DELIVERY");
+				committeeMemberData.put("position","Senior Vice President");
+				committeeMembers.add(committeeMemberData);
+			}
+			else if(userRole == "Vice President for Commercial")
+			{
+				committeeMemberData.put("email",userEmail);
+				committeeMemberData.put("role","EXECUTIVE - COMMERCIAL");
+				committeeMemberData.put("position","Vice President");
+				committeeMembers.add(committeeMemberData);
+			}
+			else if(userRole == "Vice President for External Affairs and Control")
+			{
+				committeeMemberData.put("email",userEmail);
+				committeeMemberData.put("role","EXECUTIVE - EXTERNAL AFFAIRS & CONTROL");
+				committeeMemberData.put("position","Vice President");
+				committeeMembers.add(committeeMemberData);
+			}
+			else if(userRole == "Legal and Bid Audit Head")
+			{
+				committeeMemberData.put("email",userEmail);
+				committeeMemberData.put("role","LEGAL");
+				committeeMemberData.put("position","Head");
+				committeeMembers.add(committeeMemberData);
+			}
+			else if(userRole == "Risk Management Unit Head")
+			{
+				committeeMemberData.put("email",userEmail);
+				committeeMemberData.put("role","RISK MANAGEMENT");
+				committeeMemberData.put("position","Unit Head");
+				committeeMembers.add(committeeMemberData);
+			}
+			// Project Team - for fixed users
+			else if(userRole == "Chief Sales Officer")
+			{
+				committeeMemberData.put("email",userEmail);
+				committeeMemberData.put("role","SALES DEPARTMENT");
+				committeeMemberData.put("position","Executive Sales Director/Chief Sales Officer (CSO)");
+				committeeMembers.add(committeeMemberData);
+			}
+			else if(userRole == "Commercial Unit Head")
+			{
+				committeeMemberData.put("email",userEmail);
+				committeeMemberData.put("role","COMMERCIAL");
+				committeeMemberData.put("position","Unit Head & Designated Cost Analyst");
+				committeeMembers.add(committeeMemberData);
+			}
+		}
+		else
+		{
+			info user.get("full_name") + " is inactive.";
+		}
+	}
+	// Project Team - that will be based on the ..
+	// .. assigned account manager
+	// --
+	// Sales Head - Immediate Head of assigned AM
+	if(isNotPresentHead == false)
+	{
+		committeeMemberData = Map();
+		committeeMemberData.put("email",immediateHeadEmail);
+		committeeMemberData.put("role","SALES DEPARTMENT");
+		committeeMemberData.put("position","Sales Head/Account Manager");
+		committeeMembers.add(committeeMemberData);
+	}
+	// Assigned Solution Architect
+	committeeMemberData = Map();
+	committeeMemberData.put("email",solutionArchitectEmail);
+	committeeMemberData.put("role","TECHNOLOGY HOUSE");
+	committeeMemberData.put("position","Solutions Architect");
+	committeeMembers.add(committeeMemberData);
+	// Assigned Technical Personnel - Technical House
+	committeeMemberData = Map();
+	committeeMemberData.put("email",technicalPersonnelEmail);
+	committeeMemberData.put("role","TECHNOLOGY HOUSE");
+	committeeMemberData.put("position","Head / Designated Engr");
+	committeeMembers.add(committeeMemberData);
+	// Assigned Technical Engr. - Project Management
+	committeeMemberData = Map();
+	committeeMemberData.put("email",technicalEngrEmail);
+	committeeMemberData.put("role","PROJECT MANAGEMENT");
+	committeeMemberData.put("position","Head & Designated Engr");
+	committeeMembers.add(committeeMemberData);
+	// Assigned Bid Auditor
+	committeeMemberData = Map();
+	committeeMemberData.put("email",bidAuditorEmail);
+	committeeMemberData.put("role","BID AUDITOR");
+	committeeMemberData.put("position","Assigned Bid Auditor");
+	committeeMembers.add(committeeMemberData);
+}
+// Less than 50M
+else
+{
+	info "Project Budget : less than 50M";
+	for each  user in getUsers.get("users")
+	{
+		if(user.get("status").equalsIgnoreCase("active"))
+		{
+			info user.get("full_name") + " is active.";
+			userRole = user.get("role").get("name");
+			userId = user.get("id");
+			userEmail = user.get("email");
+			committeeMemberData = Map();
+			// Additional Committee Members
+			if(userRole == "Vice President for External Affairs and Control")
+			{
+				committeeMemberData.put("email",userEmail);
+				committeeMemberData.put("role","EXECUTIVE - EXTERNAL AFFAIRS & CONTROL");
+				committeeMemberData.put("position","Vice President");
+				committeeMembers.add(committeeMemberData);
+			}
+			else if(userRole == "Vice President for Commercial")
+			{
+				committeeMemberData.put("email",userEmail);
+				committeeMemberData.put("role","EXECUTIVE - COMMERCIAL");
+				committeeMemberData.put("position","Vice President");
+				committeeMembers.add(committeeMemberData);
+			}
+			else if(userRole == "Legal and Bid Audit Head")
+			{
+				committeeMemberData.put("email",userEmail);
+				committeeMemberData.put("role","LEGAL");
+				committeeMemberData.put("position","Head");
+				committeeMembers.add(committeeMemberData);
+			}
+			else if(userRole == "Risk Management Unit Head")
+			{
+				committeeMemberData.put("email",userEmail);
+				committeeMemberData.put("role","RISK MANAGEMENT");
+				committeeMemberData.put("position","Unit Head");
+				committeeMembers.add(committeeMemberData);
+			}
+			// Project Team - for fixed users
+			else if(userRole == "Chief Sales Officer")
+			{
+				committeeMemberData.put("email",userEmail);
+				committeeMemberData.put("role","SALES DEPARTMENT");
+				committeeMemberData.put("position","Executive Sales Director/Chief Sales Officer (CSO)");
+				committeeMembers.add(committeeMemberData);
+			}
+			else if(userRole == "Commercial Unit Head")
+			{
+				committeeMemberData.put("email",userEmail);
+				committeeMemberData.put("role","COMMERCIAL");
+				committeeMemberData.put("position","Unit Head & Designated Cost Analyst");
+				committeeMembers.add(committeeMemberData);
+			}
+		}
+		else
+		{
+			info user.get("full_name") + " is inactive.";
+		}
+	}
+	// Project Team - that will be based on the ..
+	// .. assigned account manager
+	// --
+	// Sales Head - Immediate Head of assigned AM
+	committeeMemberData = Map();
+	committeeMemberData.put("email",immediateHeadEmail);
+	committeeMemberData.put("role","SALES DEPARTMENT");
+	committeeMemberData.put("position","Sales Head/Account Manager");
+	committeeMembers.add(committeeMemberData);
+	// Assigned Solution Architect
+	committeeMemberData = Map();
+	committeeMemberData.put("email",solutionArchitectEmail);
+	committeeMemberData.put("role","TECHNOLOGY HOUSE");
+	committeeMemberData.put("position","Solutions Architect");
+	committeeMembers.add(committeeMemberData);
+	// Assigned Technical Personnel - Technical House
+	committeeMemberData = Map();
+	committeeMemberData.put("email",technicalPersonnelEmail);
+	committeeMemberData.put("role","TECHNOLOGY HOUSE");
+	committeeMemberData.put("position","Head / Designated Engr");
+	committeeMembers.add(committeeMemberData);
+	// Assigned Technical Engr. - Project Management
+	committeeMemberData = Map();
+	committeeMemberData.put("email",technicalEngrEmail);
+	committeeMemberData.put("role","PROJECT MANAGEMENT");
+	committeeMemberData.put("position","Head & Designated Engr");
+	committeeMembers.add(committeeMemberData);
+	// Assigned Bid Auditor
+	committeeMemberData = Map();
+	committeeMemberData.put("email",bidAuditorEmail);
+	committeeMemberData.put("role","BID AUDITOR");
+	committeeMemberData.put("position","Assigned Bid Auditor");
+	committeeMembers.add(committeeMemberData);
+}
+/* ---------------------------------------------------------------------------------------------- */
+// Generate Bid Committee Votes records and assign ..
+// .. respective voter per record
+info committeeMembers;
+info "Committee Members count : " + committeeMembers.size();
+internalBiddingName = recordData.get("Name");
+internalBiddingVoteDate = recordData.get("Voting_Date");
+// 11/19/25 added for setting the default Bid Committee Vote Status
+internalBiddingVoteStatus = "Pending";
+// Create Bid Committee Vote record per member
+for each  committeeMember in committeeMembers
+{
+	if(committeeMember != null && committeeMember != "")
+	{
+		// Pull Committee Member Employee data from ..
+		// .. Employee List module
+		// AND Populate Committee Members to Internal Bidding
+		querySelect = "select id, Email_Address, Employee_ID_Number, Department, Position from Employees_List ";
+		queryWhere = "where Email_Address = '" + committeeMember.get("email") + "'";
+		queryLimit = " limit 200";
+		query = querySelect + queryWhere + queryLimit;
+		queryMap = Map();
+		queryMap.put("select_query",query);
+		searchEmployeeMetaData = invokeurl
+		[
+			url :"https://www.zohoapis.com/crm/v6/coql"
+			type :POST
+			parameters:queryMap.toString()
+			connection:"zohocrm_connection"
+		];
+		if(searchEmployeeMetaData != "")
+		{
+			employeeId = searchEmployeeMetaData.get("data").get(0).get("id");
+			employeeName = searchEmployeeMetaData.get("data").get(0).get("Name");
+			employeeIdNumber = searchEmployeeMetaData.get("data").get(0).get("Employee_ID_Number");
+			employeeDepartment = searchEmployeeMetaData.get("data").get(0).get("Department");
+			employeePosition = searchEmployeeMetaData.get("data").get(0).get("Position");
+			// Fixed role and position based on the ..
+			// .. internal bidding template
+			memberRole = committeeMember.get("role");
+			memberPosition = committeeMember.get("position");
+			// Pull Committee Member User data from ..
+			// .. licensed users database
+			employeeUserData = zoho.crm.searchRecords("users","(email:equals:" + committeeMember.get("email") + ")");
+			// Validate if existing user
+			if(employeeUserData.size() > 0)
+			{
+				employeeFirstName = employeeUserData.get("users").get(0).get("first_name");
+				employeeLastName = employeeUserData.get("users").get(0).get("last_name");
+				employeeFullName = ifNull(employeeFirstName,"") + " " + ifNull(employeeLastName,"");
+				employeeUserId = employeeUserData.get("users").get(0).get("id");
+			}
+			// If non-existing user, assign to Internal Bidding record Owner
+			else
+			{
+				getOwnerData = zoho.crm.getRecordById("users",projectOwnerId);
+				employeeFirstName = getOwnerData.get("users").get(0).get("first_name");
+				employeeLastName = getOwnerData.get("users").get(0).get("last_name");
+				employeeFullName = ifNull(employeeFirstName,"") + " " + ifNull(employeeLastName,"");
+				employeeUserId = getOwnerData.get("users").get(0).get("id");
+			}
+			// Field Mapping for - Bid Committee Vote record
+			bidVoteParam = Map();
+			bidVoteParam.put("Name",internalBiddingName + " - " + employeeFullName);
+			bidVoteParam.put("Project_Name",projectId);
+			bidVoteParam.put("Internal_Bidding",internalBiddingID);
+			bidVoteParam.put("Voting_Date",internalBiddingVoteDate);
+			bidVoteParam.put("Owner",employeeUserId);
+			bidVoteParam.put("Name_of_Committee_Member",employeeId);
+			bidVoteParam.put("Role",memberRole);
+			bidVoteParam.put("Committee_Member_Position",memberPosition);
+			bidVoteParam.put("Vote",null);
+			bidVoteParam.put("Final_Decisionv2",null);
+			// 11/19/25 added for setting the default Bid Committee Vote Status
+			bidVoteParam.put("Status",internalBiddingVoteStatus);
+			// Generate Bid Committee Vote record
+			// 			generateRecord = zoho.crm.createRecord("Bid_Committee_Votes",bidVoteParam,{"trigger":{"workflow"}});
+			voteRecords.add(bidVoteParam);
+			// Add Committee Member Employer details in List ..
+			// .. to be used to populate Committee Members Subform
+			committeeMemberParam = Map();
+			committeeMemberParam.put("Name1",employeeId);
+			committeeMemberParam.put("Employee_ID_Number",employeeIdNumber);
+			committeeMemberParam.put("Department_1",employeeDepartment);
+			committeeMemberParam.put("Position",employeePosition);
+			committeeMembersSubformData.add(committeeMemberParam);
+		}
+		else
+		{
+			isNotComplete = true;
+			break;
+		}
+	}
+}
+if(isNotComplete == false && isNotPresentHead == false)
+{
+	/* ---------------------------------------------------------------------------------------------- */
+	// Generate Committee Members Vote Records
+	generateCOunt = 0;
+	for each  voteRecordData in voteRecords
+	{
+		generateCOunt = generateCOunt + 1;
+		generateRecord = zoho.crm.createRecord("Bid_Committee_Votes",voteRecordData,{"trigger":{"workflow"}});
+		info generateRecord;
+		if(generateRecord.containKey("Modified_Time"))
+		{
+			generateCOunt = generateCOunt + 1;
+		}
+	}
+	info generateCOunt;
+	/* ---------------------------------------------------------------------------------------------- */
+	// Populate Committee Members Subform
+	committeeMembersSubform = Map();
+	committeeMembersSubform.put("r",committeeMembersSubformData);
+	populateSubform = zoho.crm.updateRecord("Internal_Bidding",internalBiddingID,committeeMembersSubform);
+	// END - GENERATE COMMITTEE MEMBERS -
+	// PROCEED TO EMAIL NOTIFICATION AUTOMATION
+	/* ---------------------------------------------------------------------------------------------- */
+	// Get employees specified in "Name of Bid Committee Members"
+	// Get their employee email
+	// Get email template to be used
+	// Modify email template: replace merge fields and placeholders
+	// Send email template to employees using their email
+	// needed info for the email
+	// Name of Committee Members /
+	// Opp ID / 
+	// Company Name -> Client name /
+	// Project Name /
+	// CRM link /
+	// Sales Representative / Account Manager /
+	// Get Internal Bidding Record
+	internalBiddingRecord = zoho.crm.getRecordById("Internal_Bidding",internalBiddingID);
+	// Get Client Name/Company Name
+	clientName = internalBiddingRecord.get("f");
+	// Get Account Manager
+	accountManager = internalBiddingRecord.get("Account_Manager").get("name");
+	// Get CRM Link
+	crmLink = "https://crm.zoho.com/crm/org873075120/tab/CustomModule5/" + internalBiddingID;
+	// Get related Opportunity and Opportunity/Project Name
+	relatedOpportunity = internalBiddingRecord.get("Project_Name").get("id");
+	relatedOpportunityRecord = zoho.crm.getRecordById("Deals",relatedOpportunity);
+	relatedOpportunityID = relatedOpportunityRecord.get("id");
+	relatedOpportunityName = relatedOpportunityRecord.get("Deal_Name");
+	// Get email template ID
+	emailTemplateID = "6540201000001057008";
+	// Get email template content
+	fetchEmailTemplate = invokeurl
+	[
+		url :"https://www.zohoapis.com/crm/v6/settings/email_templates/" + emailTemplateID
+		type :GET
+		connection:"crm"
+	];
+	emailTemplate = fetchEmailTemplate.get("email_templates").get(0);
+	emailSubject = emailTemplate.get("subject");
+	emailContent = emailTemplate.get("content");
+	// info emailContent;
+	// Modify Email Subject
+	emailSubject = emailSubject.replaceAll("2024-0001",internalBiddingID);
+	emailSubject = emailSubject.replaceAll("${!Internal_Bidding.f}",clientName,true);
+	emailSubject = emailSubject.replaceAll("${!Internal_Bidding.Project_Name}",relatedOpportunityName,true);
+	// Modify Static Email Content
+	emailContent = emailContent.replaceAll("&lt;Opp ID&gt;",relatedOpportunityID,true);
+	emailContent = emailContent.replaceAll("&lt;Company Name&gt;",clientName,true);
+	emailContent = emailContent.replaceAll("${!Internal_Bidding.Project_Name}",relatedOpportunityName,true);
+	emailContent = emailContent.replaceAll("&lt;CRM Link&gt;",crmLink,true);
+	emailContent = emailContent.replaceAll("&lt;Admin&gt;",accountManager,true);
+	// Get subform data
+	bidCommitteeMembers = internalBiddingRecord.get("r");
+	for each  bidCommitteeMember in bidCommitteeMembers
+	{
+		id = bidCommitteeMember.get("Name1").get("id");
+		bidCommitteeMemberRecord = zoho.crm.getRecordById("Employees_List",id);
+		bidCommitteeMemberRecordName = bidCommitteeMemberRecord.get("Name");
+		bidCommitteeMemberRecordEmail = bidCommitteeMemberRecord.getJSON("Email_Address");
+		// Modify Dynamic Email Content
+		emailContent = emailContent.replaceAll("&lt;Internal Bidding.Name Of Committee Member&gt;",bidCommitteeMemberRecordName,true);
+		// Send separate email per bid committee member
+		sendmail
+		[
+			from :zoho.adminuserid
+			to :bidCommitteeMemberRecordEmail
+			subject :emailSubject
+			message :emailContent
+		]
+		// Reset email content
+		emailContent = emailContent.replaceAll(bidCommitteeMemberRecordName,"&lt;Internal Bidding.Name Of Committee Member&gt;",true);
+	}
+	// =========================================
+	// TASK CREATION FOR AM AFXK-T319
+	// =========================================
+	// GET AM EMAIL
+	amID = internalBiddingRecord.get("Account_Manager").get("id");
+	amEmployeeList = zoho.crm.getRecordById("Employees_List",amID);
+	amEmailAddress = amEmployeeList.getJSON("Email_Address");
+	// SEARCH USERS WITH AM EMAIL
+	amUserAccount = zoho.crm.searchRecords("users","(email:equals:" + amEmailAddress + ")");
+	info amUserAccount;
+	// CREATE TASK WITH USER ACCOUNT
+	taskMap = Map();
+	taskMap.put("Owner",amUserAccount.getJSON("users").getJSON("id"));
+	taskMap.put("Subject","Create KO2 Meeting");
+	// 	taskMap.put("Due_Date","2025-03-07");
+	taskMap.put("Status","Not Started");
+	taskMap.put("Priority","High");
+	taskMap.put("Description","Account Manager to create KO2 Meeting");
+	taskMap.put("$se_module","Internal_Bidding");
+	taskMap.put("What_Id",internalBiddingID);
+	taskMap.put("Send_Notification_Email",true);
+	// Enable task notification
+	createTask = zoho.crm.createRecord("Tasks",taskMap);
+	info createTask;
+	if(createTask.contains("id"))
+	{
+		sendmail
+		[
+			from :zoho.loginuserid
+			to :amEmailAddress
+			subject :"Task has been assigned to you"
+			message :"Hi " + accountManager + ",. a task to create KO2 meeting has been assigned to you."
+		]
+	}
+	return "Email Notification has been sent to Bid Committee Members.";
+}
+else
+{
+	if(isNotPresentHead == true)
+	{
+		return "User email " + committeeMember.get("email") + " does not have record in Employee List. Additionally, there is no Immediate Head assigned to the Sales Account Manager in their employee record.";
+	}
+	else
+	{
+		return "User email " + committeeMember.get("email") + " does not have record in Employee List.";
+	}
+}
+}
