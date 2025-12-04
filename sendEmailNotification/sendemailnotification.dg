@@ -1,0 +1,162 @@
+
+void automation.Send_mailmerge(String id)
+{
+record = zoho.crm.getRecordById("Internal_Bidding",id);
+desision = record.get("Final_Decision");
+info desision;
+// get values
+projectname = record.get("Project_Name").get("name");
+// get project budget
+projectid = record.get("Project_Name").get("id");
+opprec = zoho.crm.getRecordById("Deals",projectid);
+term = record.get("Draft");
+budget = opprec.get("Project_Budget");
+contact = opprec.get("Contact_Name");
+if(budget >= 50000000 && desision == "Go")
+{
+	template = "uyxp6086a4262e4e442aeb73e206ccf861ca5";
+}
+else if(budget >= 50000000 && desision == "No Go")
+{
+	template = "iyycw23891375fc3e45c2ab8bc1a1727b3a15";
+}
+else if(budget < 50000000 && desision == "Go")
+{
+	template = "iyycw7eaa04cec5e143b9b195d736b281b7a6";
+}
+else if(budget < 50000000 && desision == "No Go")
+{
+	template = "iyycw6c9b219c23974d65a9f184fc1f6ab3dc";
+}
+info template;
+// 
+accunt = opprec.get("Account_Name").get("name");
+accuntid = record.get("Account_Manager").get("id");
+dowehave = record.get("Do_we_have_Single_PO_if_government_Project");
+doyou = record.get("Do_You_Have_A_Champion");
+none = record.get("If_None_Do_We_Have_JV_For_Government_Bid");
+timeclose = record.get("Timeline_To_Close_The_Sale");
+// get accunt email
+biddate = record.get("Bid_Submission_Date");
+descript = record.get("Project_Bid_Description");
+datedess = record.get("Date_Decided");
+abbbcc = record.get("Budget_ABC");
+// get oprecord
+winner = opprec.get("WHAT_IS_THE_PROBABILITY_OF_WINNING");
+accunts = zoho.crm.getRecordById("Employees_List",accuntid);
+accuntmail = accunts.get("Email_Address");
+requirement = record.get("Is_The_Requirement_An_Upgrade_Of_A_System");
+equipbrand = record.get("If_Yes_What_Are_The_Existing_Equipment_Brands");
+nrereq = record.get("If_New_Requirement_What_Are_The_Preferred_Brands");
+incumbsupp = record.get("Who_Is_The_Incumbent_Supplier_s");
+whoare = record.get("Who_Are_The_Competitors");
+perferd = record.get("Is_There_A_Preferred_Supplier");
+isrebid = record.get("Is_This_A_Re_Bid");
+yesrebid = record.get("If_Yes_Why_did_The_Previous_Bid_Fail");
+whoprevious = record.get("Who_Are_The_Participants_In_The_Previous_Bid");
+whocontact = record.get("Who_Are_The_Contact_Persons_From_Customer_Side");
+tailor = record.get("Is_The_Requirement_Tailored_To_A_Specific_Vendor");
+tor = record.get("Can_We_Comply_With_The_TOR");
+total = record.get("Total_Score");
+govote = record.get("Total_govote");
+novote = record.get("Total_novote");
+abstain = record.get("Total_abstain");
+recordrelate = zoho.crm.getRelatedRecords("Committe_Votes","Internal_Bidding",id);
+info recordrelate;
+volt = record.get("Vote");
+manager = record.get("Account_Manager");
+voteList = list();
+for each  recordrelate in recordrelate
+{
+	voteList.add({"Committe_Votes.Role":recordrelate.get("Role"),"Committe_Votes.Committee_Member_Position":recordrelate.get("Committee_Member_Position"),"Committe_Votes.Name_of_Committee_Member":recordrelate.get("Name_of_Committee_Member").get("name"),"Committe_Votes.Voting_Date":recordrelate.get("Voting_Date"),"Committe_Votes.Vote":recordrelate.get("Vote"),"Committe_Votes.Reason_s":recordrelate.get("Reason_s")});
+}
+info voteList;
+mergeData = Map();
+mergeData.put("id",id);
+mergeData.put("Account_Manager",manager);
+mergeData.put("Project_Name.Contact_Name",contact);
+mergeData.put("Project_Name",projectname);
+mergeData.put("Is_The_Requirement_An_Upgrade_Of_A_System",requirement);
+mergeData.put("If_Yes_What_Are_The_Existing_Equipment_Brands",equipbrand);
+mergeData.put("If_New_Requirement_What_Are_The_Preferred_Brands",nrereq);
+mergeData.put("Who_Is_The_Incumbent_Supplier_s",incumbsupp);
+mergeData.put("Who_Are_The_Competitors",whoare);
+mergeData.put("Is_There_A_Preferred_Supplier",perferd);
+mergeData.put("Is_This_A_Re_Bid",isrebid);
+mergeData.put("If_Yes_Why_did_The_Previous_Bid_Fail",yesrebid);
+mergeData.put("Who_Are_The_Participants_In_The_Previous_Bid",whoprevious);
+mergeData.put("Who_Are_The_Contact_Persons_From_Customer_Side",whocontact);
+mergeData.put("Is_The_Requirement_Tailored_To_A_Specific_Vendor",tailor);
+mergeData.put("Can_We_Comply_With_The_TOR",tor);
+mergeData.put("Total_Score",total);
+mergeData.put("Project_Name.Account_Name",accunt);
+mergeData.put("Total_govote",govote);
+mergeData.put("Total_novote",novote);
+mergeData.put("Total_abstain",abstain);
+mergeData.put("Final_Decision",desision);
+mergeData.put("Bid_Submission_Date",biddate);
+mergeData.put("Project_Bid_Description",descript);
+mergeData.put("Date_Decided",datedess);
+mergeData.put("Budget_ABC",abbbcc);
+mergeData.put("Project_Name.WHAT_IS_THE_PROBABILITY_OF_WINNING",winner);
+mergeData.put("Do_we_have_Single_PO_if_government_Project",dowehave);
+mergeData.put("Do_You_Have_A_Champion",doyou);
+mergeData.put("If_None_Do_We_Have_JV_For_Government_Bid",none);
+mergeData.put("Timeline_To_Close_The_Sale",timeclose);
+mergeData.put("Draft",term);
+mergeData.put("Committe_Votes",voteList);
+info total;
+data_map = Map();
+data_map.put("data",mergeData);
+merge_details = Map();
+merge_details.put("merge_data",data_map);
+optional_settings = Map();
+output_settings = Map();
+output_settings.put("output_format","pdf");
+output_settings.put("subject","Bidding Report");
+output_settings.put("message","Please see bid result on attached file");
+
+
+// getCommitteeMembers = zoho.crm.getRelatedRecords("Committe_Votes", "Internal_Bidding", id);
+// info getCommitteeMembers;
+
+getCommitteeMembers = zoho.crm.getRelatedRecords("Committe_Votes", "Internal_Bidding", id);
+	
+	finalOwnersList = list();
+	
+	for each memberRecord in getCommitteeMembers
+	{
+		memberInfo = Map();
+		
+		ownerMap = memberRecord.get("Owner");
+		ownerId = if(ownerMap != null, ownerMap.get("id"), null);
+		
+		ownerEmail = null;
+		ownerName = null;
+		
+		if (ownerId != null)
+		{
+			ownerDetails = zoho.crm.getRecordById("Users", ownerId.toLong());
+			
+			if (ownerDetails.containkey("email"))
+			{
+				ownerEmail = ownerDetails.get("email");
+				ownerName = ownerDetails.get("full_name");
+			}
+		}
+		
+		memberInfo.put("Related_Record_ID", memberRecord.get("id"));
+		memberInfo.put("Owner_Name", ownerName);
+		memberInfo.put("Owner_Email", ownerEmail);
+		
+		finalOwnersList.add(memberInfo);
+	}
+
+
+
+output_settings.put("recipient_email",accuntmail);
+optional_settings.put("attachment_name","INTERNAL BIDDING DECISION (GO or NOGO) - " + projectname);
+response = zoho.writer.v2.mergeAndSend(template,merge_details,output_settings,optional_settings,"crm");
+// accuntmail
+info response;
+}
