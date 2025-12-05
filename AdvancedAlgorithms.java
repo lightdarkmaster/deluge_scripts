@@ -974,7 +974,3 @@ public class AdvancedAlgorithms {
         pln("\nDemo complete. Explore, modify, and reuse these classes for complex problems!");
     }
 }
-
-
-//Need to cater new changes back in the previous version algorithms
-//TODO: Create a new version
