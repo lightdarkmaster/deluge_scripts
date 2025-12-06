@@ -1,0 +1,22 @@
+void automation.syncSubmissionDate1(Int oppID)
+{
+dealRecord = zoho.crm.getRecordById("Deals",oppID);
+submissionDate = dealRecord.get("BID_PROPOSAL_SUBMISSION_DATE");
+info "Submission Date " + submissionDate;
+if(submissionDate == null)
+{
+	return;
+}
+internalBiddingRecords = zoho.crm.getRelatedRecords("Internal_Bidding_Go_or_No_Go","Deals",oppID);
+if(internalBiddingRecords.isEmpty())
+{
+	return;
+}
+internalBiddingRecord = internalBiddingRecords.get(0);
+internalBiddingID = internalBiddingRecord.get("id");
+internalSubmissionDateAPIName = "Bid_Submission_Date";
+param = Map();
+param.put(internalSubmissionDateAPIName,submissionDate);
+updateResponse = zoho.crm.updateRecord("Internal_Bidding",internalBiddingID,param);
+info updateResponse;
+}
