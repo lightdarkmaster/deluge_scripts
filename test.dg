@@ -1,3 +1,5 @@
 void automation{
     //get data from other modules...
+
+    record = zoho.crm.getRelatedRecords("RelatedList", "Parent_Module", Id);
 }
