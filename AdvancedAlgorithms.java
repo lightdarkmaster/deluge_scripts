@@ -973,4 +973,13 @@ public class AdvancedAlgorithms {
 
         pln("\nDemo complete. Explore, modify, and reuse these classes for complex problems!");
     }
+
+
+    /**
+     * Run the demo program as if the main method were called
+     * with no command line arguments.
+     */
+    public static void createDemo(){
+        main(new String[]{});
+    }
 }
