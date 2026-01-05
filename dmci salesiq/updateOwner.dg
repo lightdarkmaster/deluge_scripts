@@ -58,7 +58,7 @@ if(payload.size() != 0)
 		[
 			url :"https://www.zohoapis.com/crm/v7/coql"
 			type :POST
-			parameters:queryMap
+			parameters:queryMap.toString()//added the toString() method..
 			connection:"flow_to_crm_connections"
 		];
 		info "CRM coql";
