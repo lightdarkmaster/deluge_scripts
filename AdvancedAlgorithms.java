@@ -4,6 +4,8 @@
 // Run:     java AdvancedAlgorithms
 // by: Christian Barbosa
 
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.*;
@@ -979,7 +981,8 @@ public class AdvancedAlgorithms {
      * Run the demo program as if the main method were called
      * with no command line arguments.
      */
-    public static void createDemo(){
+    public static void createDemo() throws UnsupportedEncodingException{
+        System.setOut(new PrintStream(System.out, true, "UTF-8"));
         main(new String[]{});
     }
 }
