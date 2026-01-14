@@ -1,0 +1,88 @@
+void automation.sendBrochure(String leadId)
+{
+// =========================
+// Fetch Lead
+// =========================
+leadRec = zoho.crm.getRecordById("Leads",leadId);
+if(leadRec == null)
+{
+	info "Lead not found";
+	return;
+}
+projectInterested = ifnull(leadRec.get("Project_Interested_In"),"");
+// =========================
+// Project → Writer Doc Mapping
+// =========================
+projectDocMap = Map();
+projectDocMap.put("Courtyard at Lakewood City","DOC_ID_1");
+projectDocMap.put("Playa Azalea","DOC_ID_2");
+projectDocMap.put("Playa Laiya","DOC_ID_3");
+projectDocMap.put("Woodgrove Park Subdivision","DOC_ID_4");
+projectDocMap.put("Waterwood Park Subdivision","DOC_ID_5");
+projectDocMap.put("Ridgewood Park","DOC_ID_6");
+projectDocMap.put("Clubshare","DOC_ID_7");
+projectDocMap.put("Amara en Terrazas","DOC_ID_8");
+projectDocMap.put("Hacienda Escudero","DOC_ID_9");
+projectDocMap.put("Leisure Farms","DOC_ID_10");
+projectDocMap.put("Lakewood Golf Estates","DOC_ID_11");
+projectDocMap.put("Montelago Nature Estates","DOC_ID_12");
+projectDocMap.put("Canyon Woods","DOC_ID_13");
+projectDocMap.put("Playa Calatagan","DOC_ID_14");
+projectDocMap.put("Ponderosa Leisure Farms","DOC_ID_15");
+projectDocMap.put("Stonecrest Village","DOC_ID_16");
+projectDocMap.put("Tribeca Private Residences (now: East Bay Residences)","vcamp69c1508845ee413e991634e562b6c564");
+projectDocMap.put("Terrazas de Punta Fuego","DOC_ID_18");
+projectDocMap.put("Woodridge Garden Village","DOC_ID_19");
+projectDocMap.put("Woodside Garden","DOC_ID_20");
+projectDocMap.put("Club Laiya – Commercial","DOC_ID_21");
+projectDocMap.put("Peninsula de Punta Fuego","DOC_ID_22");
+projectDocMap.put("The Nautilus","lgxnia08226f037e542c98d7570e851c26747");
+projectDocMap.put("Casobe","DOC_ID_24");
+projectDocMap.put("The Spinnaker","b6bu58277280144bc4496b52aa95706609e8d");
+projectDocMap.put("The Residence at Terrazas de Punta Fuego","DOC_ID_26");
+projectDocMap.put("Club Laiya – Residential","DOC_ID_27");
+projectDocMap.put("Pacific Heights","DOC_ID_28");
+projectDocMap.put("Pacific Mall","DOC_ID_29");
+// =========================
+// Get Document ID
+// =========================
+document_id = projectDocMap.get(projectInterested);
+if(document_id == null || document_id == "")
+{
+	info "No brochure mapped for project: " + projectInterested;
+	return;
+}
+// =========================
+// Merge Data
+// =========================
+recordMap = Map();
+recordMap.put("id",leadId);
+mergeDataList = List();
+mergeDataList.add(recordMap);
+mergeDetail = Map();
+mergeDetail.put("merge_data",{"data":mergeDataList});
+// =========================
+// Email Settings
+// =========================
+outputSettings = Map();
+outputSettings.put("output_format","pdf");
+outputSettings.put("subject","Brochure – " + projectInterested);
+outputSettings.put("message","Please find attached the brochure for " + projectInterested + ".");
+outputSettings.put("recipient_email",leadRec.get("Email"));
+optionalSettings = Map();
+// =========================
+// Merge & Send
+// =========================
+response = zoho.writer.v2.mergeAndSend(document_id,mergeDetail,outputSettings,optionalSettings,"zoho_mailmerge");
+info response;
+}
+
+
+
+// connection should be zoho_mailmerge
+// Scopes:
+//     ZohoWriter.documentEditor.ALL
+//     ZohoWriter.Merge.ALL
+//     ZohoCRM.templates.email.READ
+//     ZohoCRM.settngs.mailmerge.CREATE
+//     ZohoCRM.settings.emails.ALL
