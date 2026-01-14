@@ -1,0 +1,36 @@
+
+document_id = "ahkj498466cd211be4a328bb5680b12616cb0";
+
+// Merge data
+recordMap = Map();
+recordMap.put("id", "6215327000024858188"); // ✅ REQUIRED
+
+// Optional: only if this field exists in the doc
+ recordMap.put("emptyfield", " ");
+
+mergeDataList = List();
+mergeDataList.add(recordMap);
+
+mergeDetail = Map();
+mergeDetail.put("merge_data", {"data": mergeDataList});
+
+// Email settings
+outputSettings = Map();
+outputSettings.put("output_format", "pdf");
+outputSettings.put("subject", "Document Copy");
+outputSettings.put("message", "Please find the attached document.");
+outputSettings.put("recipient_email", "kenneth.demo.acc2@gmail.com");
+
+// Optional
+optionalSettings = Map();
+
+// Merge & send
+response = zoho.writer.v2.mergeAndSend(
+	document_id,
+	mergeDetail,
+	outputSettings,
+	optionalSettings,
+	"zoho"
+);
+
+info response;
