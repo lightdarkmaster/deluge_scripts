@@ -7,74 +7,74 @@ sendmail
 	subject :"Test"
 	message :"Test Webhook"
 ]
-//     // Use the built-in input map (webhook / function params are available here)
-//     if(input == null)
-//     {
-//         return "No input received.";
-//     }
-//     info input;
-//     // Get chat_id from webhook payload
-// //     chatId = input.get("chat_id");
-// 	chatId = zoho.salesiq.getPortalInfo("dmcihomes5226");
-//     if(chatId == null)
-//     {
-//         return "No chat ID received in payload.";
-//     }
-//     // === 2. Fetch conversation details from SalesIQ ===
-//     salesIQData = invokeurl
-//     [
-//         url: "https://salesiq.zoho.com/api/visitor/v1/{screen_name}/conversations/" + chatId
-//     	type : GET
-//    		connection : "salesiqreadchat"
-//     ];
-//     info salesIQData;
-//     // Defensive checks for expected structure
-//     if(salesIQData == null || salesIQData.get("data") == null)
-//     {
-//         return "Failed to retrieve conversation or unexpected SalesIQ response.";
-//     }
-//     // === 3. Extract SalesIQ operator (attender) and visitor email ===
-//     attenderMap = salesIQData.get("data").get("attender");
-//     visitorMap = salesIQData.get("data").get("visitor");
-//     operatorEmail = null;
-//     if(attenderMap != null)
-//     {
-//         // attender might be an object with 'email'
-//         operatorEmail = ifnull(attenderMap.get("email"), null);
-//     }
-//     visitorEmail = null;
-//     if(visitorMap != null)
-//     {
-//         visitorEmail = ifnull(visitorMap.get("email"), null);
-//     }
-//     if(operatorEmail == null)
-//     {
-//         return "No operator (attender) email found in conversation.";
-//     }
-//     if(visitorEmail == null)
-//     {
-//         return "No visitor email found in conversation.";
-//     }
-//     // === 4. Search the matching Lead in Zoho CRM using visitor email ===
-//     leadSearch = zoho.crm.searchRecords("Leads", "(Email:equals:" + visitorEmail + ")");
-//     if(leadSearch == null || leadSearch.isEmpty())
-//     {
-//         return "No Lead found matching visitor email: " + visitorEmail;
-//     }
-//     lead = leadSearch.get(0);
-//     leadId = lead.get("id");
-//     // === 5. Search CRM user using operator email ===
-//     crmUserSearch = zoho.crm.searchRecords("users", "(email:equals:" + operatorEmail + ")");
-//     if(crmUserSearch == null || crmUserSearch.isEmpty())
-//     {
-//         return "CRM user not found for operator email: " + operatorEmail;
-//     }
-//     ownerId = crmUserSearch.get(0).get("id");
-//     // === 6. Update Lead Owner ===
-//     updateMap = Map();
-//     updateMap.put("Owner", {"id": ownerId});
-//     updateResp = zoho.crm.updateRecord("Leads", leadId, updateMap);
-//     info updateResp;
-//     return "Lead (ID: " + leadId.toString() + ") owner updated to operator: " + operatorEmail;
+    // Use the built-in input map (webhook / function params are available here)
+    if(input == null)
+    {
+        return "No input received.";
+    }
+    info input;
+    // Get chat_id from webhook payload
+//     chatId = input.get("chat_id");
+	chatId = zoho.salesiq.getPortalInfo("dmcihomes5226");
+    if(chatId == null)
+    {
+        return "No chat ID received in payload.";
+    }
+    // === 2. Fetch conversation details from SalesIQ ===
+    salesIQData = invokeurl
+    [
+        url: "https://salesiq.zoho.com/api/visitor/v1/{screen_name}/conversations/" + chatId
+    	type : GET
+   		connection : "salesiqreadchat"
+    ];
+    info salesIQData;
+    // Defensive checks for expected structure
+    if(salesIQData == null || salesIQData.get("data") == null)
+    {
+        return "Failed to retrieve conversation or unexpected SalesIQ response.";
+    }
+    // === 3. Extract SalesIQ operator (attender) and visitor email ===
+    attenderMap = salesIQData.get("data").get("attender");
+    visitorMap = salesIQData.get("data").get("visitor");
+    operatorEmail = null;
+    if(attenderMap != null)
+    {
+        // attender might be an object with 'email'
+        operatorEmail = ifnull(attenderMap.get("email"), null);
+    }
+    visitorEmail = null;
+    if(visitorMap != null)
+    {
+        visitorEmail = ifnull(visitorMap.get("email"), null);
+    }
+    if(operatorEmail == null)
+    {
+        return "No operator (attender) email found in conversation.";
+    }
+    if(visitorEmail == null)
+    {
+        return "No visitor email found in conversation.";
+    }
+    // === 4. Search the matching Lead in Zoho CRM using visitor email ===
+    leadSearch = zoho.crm.searchRecords("Leads", "(Email:equals:" + visitorEmail + ")");
+    if(leadSearch == null || leadSearch.isEmpty())
+    {
+        return "No Lead found matching visitor email: " + visitorEmail;
+    }
+    lead = leadSearch.get(0);
+    leadId = lead.get("id");
+    // === 5. Search CRM user using operator email ===
+    crmUserSearch = zoho.crm.searchRecords("users", "(email:equals:" + operatorEmail + ")");
+    if(crmUserSearch == null || crmUserSearch.isEmpty())
+    {
+        return "CRM user not found for operator email: " + operatorEmail;
+    }
+    ownerId = crmUserSearch.get(0).get("id");
+    // === 6. Update Lead Owner ===
+    updateMap = Map();
+    updateMap.put("Owner", {"id": ownerId});
+    updateResp = zoho.crm.updateRecord("Leads", leadId, updateMap);
+    info updateResp;
+    return "Lead (ID: " + leadId.toString() + ") owner updated to operator: " + operatorEmail;
 return "";
 }
