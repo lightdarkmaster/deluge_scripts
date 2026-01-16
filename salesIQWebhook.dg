@@ -40,7 +40,7 @@ sendmail
     if(attenderMap != null)
     {
         // attender might be an object with 'email'
-        operatorEmail = ifnull(attenderMap.get("email"), null);
+        operatorEmail = ifnull(attenderMap.get("email"), null); 
     }
     visitorEmail = null;
     if(visitorMap != null)
