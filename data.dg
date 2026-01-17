@@ -1,14 +1,14 @@
-void automation.getGP1(Int recordID,Int projectName)
+void automation.getGP1(Int recordID, Int projectName)
 {
-relatedListfromOpp = zoho.crm.getRelatedRecords("Price_proposal","Deals",projectName);
-priceproposalID = relatedListfromOpp.get(0).get("id");
-priceproposal = zoho.crm.getRecordById("Price_proposal",priceproposalID);
-gp = priceproposal.get("age_GROSS_PROFIT");
-if(!gp < 0)
-{
-	info zoho.crm.updateRecord("Commercial_Task_Ticket",recordID,{"GP":gp});
+	relatedListFromOpp = zoho.crm.getRelatedRecords("Price_proposal","Deals", projectName);
+	if(!relatedListFromOpp.isEmpty())
+	{
+		priceProposalID = relatedListFromOpp.get(0).get("id");
+		priceProposalRecord = zoho.crm.getRecordById("Price_proposal",priceProposalID);
+		if(priceProposalRecord != null && priceProposalRecord.get("age_GROSS_PROFIT") != null)
+		{
+			gp = priceProposalRecord.get("age_GROSS_PROFIT");
+			info zoho.crm.updateRecord("Commercial_Task_Ticket",recordID, {"GP": gp});
+		}
+	}
 }
-}
-
-
-//Need verifications....
