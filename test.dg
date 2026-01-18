@@ -1,6 +1,20 @@
-void automation{
+void automation(Int Id)
+{
     //get data from other modules...
 
-    record = zoho.crm.getRelatedRecords("RelatedList", "Parent_Module", Id);
+    record = zoho.crm.getRelatedRecords("RelatedList", "Parent_module", Id);
     info record;
+
+    if(!record.isEmpty())
+    {
+        //process the data
+        foreach(rel in record)
+        {
+            info rel;
+        }
+    }
+    else
+    {
+        info "No related records found";
+    }
 }
