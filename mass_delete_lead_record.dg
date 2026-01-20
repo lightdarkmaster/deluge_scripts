@@ -35,3 +35,12 @@ return "Deleted " + totalDeleted + " leads this session. Remaining: ";
 }
 
 
+
+// ZohoCRM.bulk.ALL
+
+// ZohoCRM.modules.leads.ALL
+
+// ZohoCRM.mass_delete.leads.READ
+
+// ZohoCRM.mass_delete.leads.DELETE
+
