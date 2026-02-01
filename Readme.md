@@ -1,34 +1,85 @@
 # README
 
-This repository contains custom functions for Zoho CRM. These functions are created for specific purposes only and should not be used without proper understanding of their functionality.
+Welcome to the **Zoho CRM Custom Functions Repository**. This repository provides a collection of custom Deluge functions designed to automate and streamline various processes within Zoho CRM. Each function is tailored for a specific business scenario and should be used with a clear understanding of its logic and impact.
+
+## Overview
+
+Zoho CRM is a powerful platform, and custom functions allow you to extend its capabilities. The functions in this repository are intended to:
+
+- Automate repetitive tasks
+- Ensure data consistency
+- Integrate and link CRM modules
+- Reduce manual errors
+
+**Note:** The functions are renamed for clarity, and original files are hidden to prevent accidental misuse. Please review each function’s documentation before implementation.
 
 ## Functions
 
-The functions in this repository are renamed and the original files are hidden. Please do not attempt to use these functions without proper understanding of their functionality.
-
-The functions are categorized based on their purpose and are listed below:
+The available functions are organized by their business purpose:
 
 ### Lead Conversion
 
-* `convert_lead_to_account_and_contact`: This function converts a lead record into an account and contact record. It takes the lead record as an argument and returns the IDs of the newly created account and contact records.
+- **`convert_lead_to_account_and_contact`**  
+    Converts a lead record into both an account and a contact record.  
+    **Parameters:**  
+    - `lead_record`: The lead record to convert  
+    **Returns:**  
+    - IDs of the newly created account and contact records  
+    **Usage Scenario:**  
+    Use when a lead qualifies and needs to be promoted to an account and contact in Zoho CRM.
 
 ### Deal Creation
 
-* `create_deal_and_link_account_and_contact`: This function creates a deal record and links it to an account and contact record. It takes the account ID and contact ID as arguments and returns the ID of the newly created deal record.
+- **`create_deal_and_link_account_and_contact`**  
+    Creates a new deal and associates it with an existing account and contact.  
+    **Parameters:**  
+    - `account_id`: The ID of the account  
+    - `contact_id`: The ID of the contact  
+    **Returns:**  
+    - ID of the newly created deal record  
+    **Usage Scenario:**  
+    Use when you want to initiate a new deal for a specific account and contact.
 
 ### Maintenance Record Creation
 
-* `create_maintenance_record`: This function creates a maintenance record for a given deal. It takes the deal ID as an argument and returns the ID of the newly created maintenance record.
+- **`create_maintenance_record`**  
+    Generates a maintenance record linked to a specific deal.  
+    **Parameters:**  
+    - `deal_id`: The ID of the deal  
+    **Returns:**  
+    - ID of the newly created maintenance record  
+    **Usage Scenario:**  
+    Use to track maintenance activities or service records related to a deal.
+
+## How to Use
+
+1. **Review the Function:**  
+     Read the inline documentation and comments within each function file to understand its logic and requirements.
+
+2. **Test in Sandbox:**  
+     Always test functions in a Zoho CRM sandbox environment before deploying to production.
+
+3. **Modify as Needed:**  
+     Adapt the functions to fit your organization’s specific workflows and data structures.
+
+4. **Deploy Carefully:**  
+     Ensure you have proper backups and change management processes in place before deploying any custom function.
 
 ## Purpose
 
-The functions in this repository were created to automate specific tasks in Zoho CRM. They are designed to be used in specific scenarios only and should not be used without proper understanding of their purpose.
+These functions were developed to automate and simplify complex or repetitive tasks in Zoho CRM. They are intended for use in well-defined scenarios and may require customization to fit your organization’s unique needs.
 
 ## Disclaimer
 
-The creator of this repository is not responsible for any damage or loss caused by the use of these functions. Use at your own risk.
+The creator of this repository is not responsible for any damage, data loss, or unintended consequences resulting from the use of these functions.  
+**Use at your own risk.**  
+It is strongly recommended to thoroughly review, test, and understand each function before deploying it in a production environment.
 
 ## License
 
-These functions are licensed under the MIT License. See the LICENSE file for more information.
+This repository is licensed under the MIT License.  
+See the [LICENSE](LICENSE) file for full details.
 
+---
+
+For questions, suggestions, or contributions, please open an issue or submit a pull request.
