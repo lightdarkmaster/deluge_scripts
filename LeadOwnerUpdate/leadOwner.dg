@@ -1,0 +1,12 @@
+void updateLeadOwner()
+{
+convfId = 1013795000000505053;
+fetchConvf = invokeurl
+[
+	url :"https://salesiq.zoho.com/api/v2/dmcihomes5226/conversations/" + convfId
+	type :GET
+	connection:"salesiq_connections"
+];
+routedUserId = fetchConvf.get("data").get("routed_users").get(0);
+info routedUserId;
+}

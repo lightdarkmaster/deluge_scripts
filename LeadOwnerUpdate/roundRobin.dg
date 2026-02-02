@@ -1,0 +1,88 @@
+map roundrobin(map crmAPIRequest)
+{
+// Zoho SalesIQ Webhook Handler - conversation.completed event
+// This script searches for a Lead in CRM and updates it with attender information
+// Parse the incoming webhook payload from SalesIQ
+payload = crmAPIRequest.get("body");
+info payload;
+// Log the payload for debugging
+// Extract visitor and attender information from the payload
+visitorEmail = payload.get("visitor").get("email");
+visitorName = payload.get("visitor").get("name");
+visitorPhone = payload.get("visitor").get("phone");
+attenderEmail = payload.get("attender").get("email");
+attenderName = payload.get("attender").get("name");
+// Log extracted information
+info "Visitor Email: " + visitorEmail;
+info "Visitor Name: " + visitorName;
+info "Attender Email: " + attenderEmail;
+info "Attender Name: " + attenderName;
+// Step 1: Search for Lead in Zoho CRM using visitor information
+searchCriteria = "(Email:equals:" + visitorEmail + ")";
+// Alternative: Search by phone if email is not available
+if(visitorEmail == null || visitorEmail == "")
+{
+	if(visitorPhone != null && visitorPhone != "")
+	{
+		searchCriteria = "(Phone:equals:" + visitorPhone + ")";
+	}
+}
+info "Search Criteria: " + searchCriteria;
+// Make API call to search for Leads
+searchResponse = zoho.crm.searchRecords("Leads",searchCriteria);
+info "Search Response: " + searchResponse;
+// Step 2: Check if Lead was found
+if(searchResponse.size() > 0)
+{
+	leadRecord = searchResponse.get(0);
+	leadId = leadRecord.get("id");
+	info "Lead Found - ID: " + leadId;
+	// Step 3: Prepare update data with attender information
+	updateMap = Map();
+	// Update custom field with attender email
+	// Replace "Attender_Email" with your actual custom field API name
+	updateMap.put("Attender_Email",attenderEmail);
+	// Update custom field with attender name
+	// Replace "Attender_Name" with your actual custom field API name
+	updateMap.put("Attender_Name",attenderName);
+	// Optional: Add conversation completion timestamp
+	updateMap.put("Last_Conversation_Date",zoho.currenttime.toString("yyyy-MM-dd"));
+	info "Update Map: " + updateMap;
+	// Step 4: Update the Lead record with workflow trigger enabled
+	// The "trigger" parameter ensures workflows are triggered after update
+	updateResponse = zoho.crm.updateRecord("Leads",leadId,updateMap,{"trigger":{"workflow"}});
+	info "Update Response: " + updateResponse;
+	// Check if update was successful
+	if(updateResponse.get("status") == "success")
+	{
+		info "Lead updated successfully with attender information";
+		return {"status":"success","message":"Lead updated with attender info","lead_id":leadId};
+	}
+	else
+	{
+		info "Failed to update lead: " + updateResponse;
+		return {"status":"error","message":"Failed to update lead","details":updateResponse};
+	}
+}
+else
+{
+	info "No Lead found with the provided visitor information";
+	// Optional: Create a new Lead if not found
+	// Uncomment the following code if you want to create a new lead
+	/*
+		newLeadMap = Map();
+		newLeadMap.put("Last_Name", visitorName);
+		newLeadMap.put("Email", visitorEmail);
+		newLeadMap.put("Phone", visitorPhone);
+		newLeadMap.put("Attender_Email", attenderEmail);
+		newLeadMap.put("Attender_Name", attenderName);
+		newLeadMap.put("Lead_Source", "SalesIQ Chat");
+		
+		createResponse = zoho.crm.createRecord("Leads", newLeadMap, {"trigger": {"workflow"}});
+		info "Create Response: " + createResponse;
+		
+		return {"status": "success", "message": "New lead created", "response": createResponse};
+		*/
+	return {"status":"not_found","message":"No matching lead found"};
+}
+}
