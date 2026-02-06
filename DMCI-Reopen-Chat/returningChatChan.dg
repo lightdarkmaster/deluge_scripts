@@ -1,0 +1,50 @@
+void returningChats(string payload)
+{
+	// ---------------------------------------------------------
+	// Fetch entity data
+	// ---------------------------------------------------------
+	entityData = payload.get("entity");
+	convfId = entityData.get("id");
+	departmentId = entityData.get("department_id");
+	screenName = "dmcihomes5226";
+
+	// Agent who reopened the chat
+	reopenedBy = entityData.get("operator_id");
+
+	// ---------------------------------------------------------
+	// Fetch conversation threads
+	// ---------------------------------------------------------
+	threadMetaData = invokeurl
+	[
+		url :"https://salesiq.zoho.com/api/v2/" + screenName + "/conversations/" + convfId + "/threads?include_fields=%5B%22attender%22%5D"
+		type :GET
+		connection:"salesiq_connections"
+	];
+
+	// Identify first agent-attended thread dynamically
+	originalAgentId = null;
+	for each threadData in threadMetaData.get("data")
+	{
+		attender = threadData.get("first_agent_attender");
+		if(attender != null && originalAgentId == null)
+		{
+			originalAgentId = attender.get("id");
+		}
+	}
+
+	info "Original Agent : " + originalAgentId;
+	info "Reopened By    : " + reopenedBy;
+
+	// ---------------------------------------------------------
+	// IMPORTANT LOGIC
+	// ---------------------------------------------------------
+	// If original agent is the one reopening, DO NOTHING
+	if(originalAgentId == reopenedBy)
+	{
+		info "Original agent reopened the chat. No transfer needed.";
+		return;
+	}
+
+	// If another agent reopened it, DO NOT force transfer
+	info "Chat reopened by different agent. Skipping auto-transfer to avoid lockout.";
+}

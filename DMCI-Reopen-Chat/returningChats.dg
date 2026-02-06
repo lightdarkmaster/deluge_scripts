@@ -1,0 +1,64 @@
+void returningChats(string payload)
+{
+// -----------------------------------------------------------------------------------------------
+// This function will trigger if the chat has been reopened
+// -----------------------------------------------------------------------------------------------
+// Fetch entity data
+entityData = payload.get("entity");
+convfId = entityData.get("id");
+departmentId = entityData.get("department_id");
+screenName = "dmcihomes5226";
+// -----------------------------------------------------------------------------------------------
+// Fetch Thread Details
+// -----------------------------------------------------------------------------------------------
+threadMetaData = invokeurl
+[
+	url :"https://salesiq.zoho.com/api/v2/dmcihomes5226/conversations/" + convfId + "/threads?include_fields=%5B%22metrics%22%2C%20%22attender%22%2C%20%22brand%22%2C%20%22transfer_details%22%5D"
+	type :GET
+	connection:"salesiq_connections"
+];
+// Fetch First Thread
+for each  threadData in threadMetaData.get("data")
+{
+	threadNumber = threadData.get("thread_number");
+	if(threadNumber == "3")
+	{
+		firstThread = threadData.get("thread_number");
+	}
+}
+threadDetails = invokeurl
+[
+	url :"https://salesiq.zoho.com/api/v2/dmcihomes5226/conversations/" + convfId + "/threads/" + firstThread + "?include_fields=%5B%22metrics%22%2C%20%22attender%22%5D"
+	type :GET
+	connection:"salesiq_connections"
+];
+info threadDetails;
+assignedOperatorId = threadDetails.get("data").get("first_agent_attender").get("id");
+info "Department id : " + departmentId;
+info "Original Operator : " + assignedOperatorId;
+// -----------------------------------------------------------------------------------------------
+// Transfer Chat to First Attender
+// -----------------------------------------------------------------------------------------------
+mp = Map();
+mp.put("department_id",departmentId);
+mp.put("operator_id",assignedOperatorId);
+mp.put("note","Transfered to first agent attendee");
+headers = Map();
+headers.put("Content-Type","application/json");
+info mp;
+transferChat = invokeurl
+[
+	url :"https://salesiq.zoho.com/api/v2/" + screenName + "/conversations/" + convfId + "/transfer"
+	type :PUT
+	parameters:mp.toText()
+	headers:headers
+	connection:"salesiq_connections"
+];
+info transferChat;
+// END
+// -----------------------------------------------------------------------------------------------
+}
+
+
+
+// original sir george code..
