@@ -1,0 +1,240 @@
+void returningChats(string payload)
+{
+try 
+{
+	// -----------------------------------------------------------------------------------------------
+	// This function ONLY handles RETURNING chats (Chat Reopened trigger)
+	// FORCES assignment to original attender, bypassing round-robin
+	// New chats will continue using SalesIQ's round-robin assignment
+	// -----------------------------------------------------------------------------------------------
+	info "=== RETURNING CHAT HANDLER TRIGGERED ===";
+	// Fetch entity data
+	entityData = payload.get("entity");
+	convfId = entityData.get("id");
+	departmentId = entityData.get("department_id");
+	screenName = "dmcihomes5226";
+	visitorId = entityData.get("visitor_id");
+	info "Conversation ID: " + convfId;
+	info "Visitor ID: " + visitorId;
+	info "Department ID: " + departmentId;
+	// -----------------------------------------------------------------------------------------------
+	// VERIFY: This is actually a returning chat (has previous threads)
+	// -----------------------------------------------------------------------------------------------
+	threadMetaData = invokeurl
+	[
+		url :"https://salesiq.zoho.com/api/v2/" + screenName + "/conversations/" + convfId + "/threads?include_fields=%5B%22metrics%22%2C%20%22attender%22%2C%20%22brand%22%2C%20%22transfer_details%22%5D"
+		type :GET
+		connection:"salesiq_connections"
+	];
+	threadsData = threadMetaData.get("data");
+	threadCount = 0;
+	if(threadsData != null)
+	{
+		threadCount = threadsData.size();
+	}
+	info "Total Threads Found: " + threadCount;
+	// If only 1 thread exists, this is a NEW chat, not a returning chat
+	// Let round-robin handle it
+	if(threadCount <= 1)
+	{
+		info "Only 1 thread found - This is a NEW chat";
+		info "Allowing round-robin assignment to proceed";
+		return;
+	}
+	info "Confirmed: Multiple threads exist - This is a RETURNING chat";
+	info "Will FORCE assignment to original attender";
+	// -----------------------------------------------------------------------------------------------
+	// Find the FIRST (Original) Thread
+	// -----------------------------------------------------------------------------------------------
+	firstThread = "";
+	lowestThreadNumber = 999999;
+	for each  threadData in threadsData
+	{
+		threadNumber = threadData.get("thread_number");
+		threadNum = 0;
+		// Convert to number safely
+		if(threadNumber.isNumber())
+		{
+			threadNum = threadNumber.toNumber();
+		}
+		else if(threadNumber.toString() != null)
+		{
+			threadNum = threadNumber.toLong();
+		}
+		else
+		{
+			threadNum = threadNumber;
+		}
+		info "Thread found: #" + threadNum;
+		if(threadNum < lowestThreadNumber && threadNum > 0)
+		{
+			lowestThreadNumber = threadNum;
+			firstThread = threadNum.toString();
+		}
+	}
+	info "First Thread Number: " + firstThread;
+	if(firstThread == "" || firstThread == null)
+	{
+		info "ERROR: Could not identify first thread";
+		info "Falling back to round-robin";
+		return;
+	}
+	// -----------------------------------------------------------------------------------------------
+	// Get Original Attender from First Thread
+	// -----------------------------------------------------------------------------------------------
+	threadDetails = invokeurl
+	[
+		url :"https://salesiq.zoho.com/api/v2/" + screenName + "/conversations/" + convfId + "/threads/" + firstThread + "?include_fields=%5B%22metrics%22%2C%20%22attender%22%5D"
+		type :GET
+		connection:"salesiq_connections"
+	];
+	threadData = threadDetails.get("data");
+	if(threadData == null)
+	{
+		info "ERROR: Thread data is null";
+		info "Falling back to round-robin";
+		return;
+	}
+	// Get original attender
+	originalAttender = threadData.get("first_agent_attender");
+	if(originalAttender == null)
+	{
+		info "No first_agent_attender found, trying attender field...";
+		originalAttender = threadData.get("attender");
+	}
+	if(originalAttender == null)
+	{
+		info "ERROR: Cannot find original attender - May have been unattended chat";
+		info "Falling back to round-robin";
+		return;
+	}
+	originalAttenderId = originalAttender.get("id");
+	originalAttenderName = originalAttender.get("name");
+	originalAttenderEmail = originalAttender.get("email");
+	info "Original Attender Found:";
+	info "  - Name: " + originalAttenderName;
+	info "  - ID: " + originalAttenderId;
+	info "  - Email: " + originalAttenderEmail;
+	// -----------------------------------------------------------------------------------------------
+	// Check if Original Attender is Available/Online
+	// -----------------------------------------------------------------------------------------------
+	operatorDetails = invokeurl
+	[
+		url :"https://salesiq.zoho.com/api/v2/" + screenName + "/operators/" + originalAttenderId
+		type :GET
+		connection:"salesiq_connections"
+	];
+	operatorStatus = operatorDetails.get("data").get("status");
+	info "Original Attender Status: " + operatorStatus;
+	// DECISION: Force assign even if offline, or fall back to round-robin?
+	// Current logic: If offline, use round-robin
+	// If you want to assign even when offline, comment out this block
+	if(operatorStatus == "offline" || operatorStatus == "invisible")
+	{
+		info "WARNING: Original attender is OFFLINE";
+		info "Falling back to round-robin for this chat";
+		// Add a note explaining why
+		noteMap = Map();
+		noteMap.put("text","Returning visitor - Original attender (" + originalAttenderName + ") is offline. Assigned via round-robin.");
+		noteMap.put("type","private_note");
+		headers = Map();
+		headers.put("Content-Type","application/json");
+		invokeurl
+		[
+			url :"https://salesiq.zoho.com/api/v2/" + screenName + "/conversations/" + convfId + "/messages"
+			type :POST
+			parameters:noteMap.toText()
+			headers:headers
+			connection:"salesiq_connections"
+		]
+		return;
+	}
+	info "Original attender is AVAILABLE - Proceeding with forced assignment";
+	// -----------------------------------------------------------------------------------------------
+	// FORCE ASSIGNMENT - Use BOTH methods to ensure it works
+	// -----------------------------------------------------------------------------------------------
+	headers = Map();
+	headers.put("Content-Type","application/json");
+	// METHOD 1: Direct Assignment
+	assignMap = Map();
+	assignMap.put("operator_id",originalAttenderId);
+	info "Step 1: Attempting ASSIGN...";
+	assignResponse = invokeurl
+	[
+		url :"https://salesiq.zoho.com/api/v2/" + screenName + "/conversations/" + convfId + "/assign"
+		type :PUT
+		parameters:assignMap.toText()
+		headers:headers
+		connection:"salesiq_connections"
+	];
+	info "Assign Response: " + assignResponse;
+	// METHOD 2: Transfer (more forceful - overrides existing assignment)
+	transferMap = Map();
+	transferMap.put("department_id",departmentId);
+	transferMap.put("operator_id",originalAttenderId);
+	transferMap.put("note","RETURNING VISITOR - Force assigned to original attender: " + originalAttenderName);
+	info "Step 2: Attempting TRANSFER (force override)...";
+	transferResponse = invokeurl
+	[
+		url :"https://salesiq.zoho.com/api/v2/" + screenName + "/conversations/" + convfId + "/transfer"
+		type :PUT
+		parameters:transferMap.toText()
+		headers:headers
+		connection:"salesiq_connections"
+	];
+	info "Transfer Response: " + transferResponse;
+	// -----------------------------------------------------------------------------------------------
+	// Add Private Note for Audit Trail
+	// -----------------------------------------------------------------------------------------------
+	noteMap = Map();
+	noteMap.put("text"," RETURNING VISITOR - Automatically force-assigned to original attender: " + originalAttenderName);
+	noteMap.put("type","private_note");
+	noteResponse = invokeurl
+	[
+		url :"https://salesiq.zoho.com/api/v2/" + screenName + "/conversations/" + convfId + "/messages"
+		type :POST
+		parameters:noteMap.toText()
+		headers:headers
+		connection:"salesiq_connections"
+	];
+	info "Private note added";
+	// -----------------------------------------------------------------------------------------------
+	// Final Verification
+	// -----------------------------------------------------------------------------------------------
+	verifyConv = invokeurl
+	[
+		url :"https://salesiq.zoho.com/api/v2/" + screenName + "/conversations/" + convfId
+		type :GET
+		connection:"salesiq_connections"
+	];
+	finalAttender = verifyConv.get("data").get("attender");
+	info "=== FINAL VERIFICATION ===";
+	if(finalAttender != null)
+	{
+		finalAttenderId = finalAttender.get("id");
+		finalAttenderName = finalAttender.get("name");
+		info "Final Assignment: " + finalAttenderName + " (ID: " + finalAttenderId + ")";
+		if(finalAttenderId == originalAttenderId)
+		{
+			info " SUCCESS: Chat FORCED to original attender!";
+		}
+		else
+		{
+			info " CRITICAL ISSUE: Force assignment FAILED!";
+			info "Expected: " + originalAttenderName + " (" + originalAttenderId + ")";
+			info "Actual: " + finalAttenderName + " (" + finalAttenderId + ")";
+			info "This suggests round-robin is overriding after the script runs";
+		}
+	}
+	else
+	{
+		info " Chat is unassigned after force assignment attempt";
+	}
+	info "=== END RETURNING CHAT HANDLER ===";
+}
+catch (e)
+{
+	info " EXCEPTION in returningChats function:";
+	info e;
+}
+}
