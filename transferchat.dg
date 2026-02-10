@@ -1,10 +1,6 @@
 // Default workflow logs
 info event + " event invoked for " + entity_type + " entity whose id is " + entity_id + " on " + event_time;
 info "Entity details are " + entity.toString();
-// ===============================
-// SalesIQ Transfer Chat API with Dynamic Operator Fallback
-// ===============================
-// Dynamic conversation ID from entity (replace with actual field API name)
 conversationId = entity.get("Conversation_ID_Field");
 if(conversationId == null || conversationId == "")
 {
@@ -26,7 +22,7 @@ operatorsList.add("958161000000191003");
 transferSuccess = false;
 headers = Map();
 headers.put("Content-Type","application/json");
-// Loop through operators
+//Pag  Loop through operators
 for each  operatorId in operatorsList
 {
 	url = "https://salesiq.zoho.com/api/v2/" + screenName + "/conversations/" + conversationId + "/transfer";
