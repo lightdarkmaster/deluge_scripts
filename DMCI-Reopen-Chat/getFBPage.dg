@@ -1,0 +1,140 @@
+void LeadOwnerUpdate(string payload)
+{
+// -----------------------------------------------------------------------------------------------
+// This function executes when Zoho SalesIQ sends webhook when ..
+// .. a chat has been created. This will then pull the operator and ..
+// .. update the generated lead record to sync the operator as Lead Owner.
+// -----------------------------------------------------------------------------------------------
+if(payload.size() != 0)
+{
+	info "With payload.";
+	// Get Payload Data
+	entityData = payload.get("entity");
+	convfId = entityData.get("id");
+	visitorName = entityData.get("visitor").get("name");
+	leadSource = "Facebook";
+	// Fetch Conversation Details
+	fetchConvf = invokeurl
+	[
+		url :"https://salesiq.zoho.com/api/v2/dmcihomes5226/conversations/" + convfId
+		type :GET
+		connection:"salesiq_connections"
+	];
+	if(!fetchConvf.containsKey("error"))
+	{
+		// Fetch Thread List
+		// "https://salesiq.zoho.com/api/v2/dmcihomes5226/conversations/" + convfId + "/threads?include_fields=%5B%22metrics%22%2C%20%22attender%22%2C%20%22brand%22%2C%20%22transfer_details%22%2C%20%22department%22%5D"
+		threadMetaData = invokeurl
+		[
+			url :"https://salesiq.zoho.com/api/v2/dmcihomes5226/conversations/" + convfId + "/threads?include_fields=%5B%22metrics%22%2C%20%22attender%22%2C%20%22brand%22%2C%20%22transfer_details%22%5D"
+			type :GET
+			connection:"salesiq_connections"
+		];
+		info "thread meta data : " + threadMetaData;
+		// Fetch latest Thread
+		threadCount = threadMetaData.get("data").size();
+		for each  threadData in threadMetaData.get("data")
+		{
+			threadNumber = threadData.get("thread_number");
+			if(threadNumber == threadCount)
+			{
+				latestThreadNumber = threadData.get("thread_number");
+			}
+		}
+		// Get Thread Details
+		// "https://salesiq.zoho.com/api/v2/dmcihomes5226/conversations/" + convfId + "/threads/" + latestThreadNumber + "?include_fields=%5B%22metrics%22%2C%20%22attender%22%2C%20%22department%22%5D"
+		threadDetails = invokeurl
+		[
+			url :"https://salesiq.zoho.com/api/v2/dmcihomes5226/conversations/" + convfId + "/threads/" + latestThreadNumber + "?include_fields=%5B%22metrics%22%2C%20%22attender%22%5D"
+			type :GET
+			connection:"salesiq_connections"
+		];
+		info "thread details : " + threadDetails;
+		if(threadDetails.size() != 0)
+		{
+			// Get latest attender
+			if(threadDetails.get("data").containsKey("last_agent_attender"))
+			{
+				info "multiple thread; last attender";
+				assignedOperatorId = threadDetails.get("data").get("last_agent_attender").get("id");
+			}
+			else
+			{
+				info "1 thread only; first attender";
+				assignedOperatorId = threadDetails.get("data").get("attender").get("id");
+			}
+			routedUserId = assignedOperatorId;
+			pageName = fetchConvf.get("data").get("visitor").get("channel_details").get("source");
+			// -----------------------------------------------------------------------------------------------
+			// Get Operator
+			// -----------------------------------------------------------------------------------------------
+			fetchOperator = invokeurl
+			[
+				url :"https://salesiq.zoho.com/api/v2/dmcihomes5226/operators/" + routedUserId
+				type :GET
+				connection:"salesiq_connections"
+			];
+			info "sales iq fetch operators";
+			info fetchOperator;
+			operatorEmail = fetchOperator.get("data").get("email_id");
+			// -----------------------------------------------------------------------------------------------
+			// Pull User Data in CRM
+			// -----------------------------------------------------------------------------------------------
+			userData = zoho.crm.searchRecords("users","(email:equals:" + operatorEmail + ")");
+			info "CRM search record";
+			info userData;
+			userCrmId = userData.get("users").get(0).get("id");
+			// -----------------------------------------------------------------------------------------------
+			// Pull Lead Record in CRM
+			// -----------------------------------------------------------------------------------------------
+			querySelect = "select id, Full_Name, Lead_Status, Created_Time from Leads ";
+			// queryWhere = "where Full_Name = '" + visitorName + "' and Lead_Status ='New Prospect'";
+			queryWhere = "where (((Full_Name = '" + visitorName + "') and Lead_Source ='" + leadSource + "') and Lead_Status ='New Prospect')";
+			queryLimit = " limit 200";
+			query = querySelect + queryWhere + queryLimit;
+			queryMap = Map();
+			queryMap.put("select_query",query);
+			searchLeadsMetaData = invokeurl
+			[
+				url :"https://www.zohoapis.com/crm/v7/coql"
+				type :POST
+				parameters:queryMap.toString()
+				connection:"flow_to_crm_connections"
+			];
+			info "CRM coql";
+			info searchLeadsMetaData;
+			if(searchLeadsMetaData != null && searchLeadsMetaData.get("data") != null)
+			{
+				leadId = searchLeadsMetaData.get("data").get(0).get("id");
+				// -----------------------------------------------------------------------------------------------
+				// Update Lead Owner
+				// -----------------------------------------------------------------------------------------------
+				param = Map();
+				param.put("Owner",userCrmId);
+				param.put("Leads_Origin",pageName);
+				updateLeadRecord = zoho.crm.updateRecord("Leads",leadId,param,{"trigger":{"workflow"}});
+				info "CRM update record";
+				info updateLeadRecord;
+			}
+			else
+			{
+				info "No lead captured.";
+			}
+		}
+		else
+		{
+			info "No thread details.";
+		}
+	}
+	else
+	{
+		info "No conversation found.";
+	}
+}
+else
+{
+	info "Payload empty.";
+}
+// END
+// -----------------------------------------------------------------------------------------------
+}
