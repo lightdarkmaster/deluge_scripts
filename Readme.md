@@ -1,6 +1,6 @@
 # README
 
-Welcome to the **Zoho CRM Custom Functions Repository**. This repository provides a collection of custom Deluge functions designed to automate and streamline various processes within Zoho CRM. Each function is tailored for a specific business scenario and should be used with a clear understanding of its logic and impact.
+Welcome to the **Zoho CRM Custom Functions Repository**, a collection of custom Deluge functions designed to automate and streamline various processes within Zoho CRM. Each function is tailored for a specific business scenario and should be used with a clear understanding of its logic and impact.
 
 ## Overview
 
@@ -83,3 +83,4 @@ See the [LICENSE](LICENSE) file for full details.
 ---
 
 For questions, suggestions, or contributions, please open an issue or submit a pull request.
+
