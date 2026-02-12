@@ -1,7 +1,6 @@
 void automation(Int Id)
 {
-    //get data from other modules...
-
+    //get data from other modules
     record = zoho.crm.getRelatedRecords("RelatedList", "Parent_module", Id);
     info record;
 
@@ -11,6 +10,23 @@ void automation(Int Id)
         foreach(rel in record)
         {
             info rel;
+            String relatedId = rel.get("id");
+            String relatedName = rel.get("name");
+            String relatedModule = rel.get("module");
+
+            // Perform additional processing on the related record
+            // For example, get the related record by ID
+            Map relatedRecord = zoho.crm.getRecordById(relatedModule, relatedId);
+
+            if(relatedRecord != null)
+            {
+                info relatedRecord;
+                // Process the related record
+            }
+            else
+            {
+                info "Related record not found for ID: " + relatedId;
+            }
         }
     }
     else
@@ -18,3 +34,4 @@ void automation(Int Id)
         info "No related records found";
     }
 }
+
