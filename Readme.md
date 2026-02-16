@@ -84,3 +84,11 @@ See the [LICENSE](LICENSE) file for full details.
 
 For questions, suggestions, or contributions, please open an issue or submit a pull request.
 
+
+The functions provided in this repository are intended to simplify and automate complex or repetitive tasks in Zoho CRM. They can be used to create custom business logic, automate workflows, and integrate with external systems.
+
+The functions are written in Deluge, a programming language specifically designed for Zoho CRM. They are executed on the Zoho CRM servers, allowing for secure and efficient execution of custom code.
+
+The functions can be triggered manually through the Zoho CRM UI, or they can be configured to run automatically in response to specific events or conditions. For example, a function can be set to run whenever a new lead is created, or whenever a deal is updated to a specific stage.
+
+The functions can also be used to create custom data validation rules, ensure data integrity, and enforce business rules. For example, a function can be used to validate the format of a phone number, or to ensure that a specific field is populated before a record can be saved.
