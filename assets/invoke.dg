@@ -1,0 +1,6 @@
+response = invokeurl [
+    url: url
+    type: GET
+    parameters: parameters
+    connection: "SalesIQ_conn"
+];
