@@ -4,3 +4,5 @@ response = invokeurl [
     parameters: parameters
     connection: "SalesIQ_conn"
 ];
+
+// This is a sample code snippet for invoking the SalesIQ API to transfer a chat conversation to a specific operator or department. The code includes error handling and fallback logic to ensure that the chat is transferred successfully even if some operators are unavailable.
