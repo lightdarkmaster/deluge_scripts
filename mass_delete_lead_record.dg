@@ -35,6 +35,7 @@ return "Deleted " + totalDeleted + " leads this session. Remaining: ";
 }
 
 
+// This is the connections scope for the code above: 
 
 // ZohoCRM.bulk.ALL
 
