@@ -1,4 +1,3 @@
-
 void automation.Send_mailmerge(String id)
 {
 record = zoho.crm.getRecordById("Internal_Bidding",id);
