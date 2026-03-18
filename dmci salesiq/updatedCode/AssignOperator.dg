@@ -1,0 +1,199 @@
+// -----------------------------------------------------------------------------------------------
+// Conversation Details
+// -----------------------------------------------------------------------------------------------
+conversationId = session.get("activeId").get("value");
+screenName = "dmcihomes5226";
+loops = {1,2,3,4,5,6,7,8,9,10};
+fetchConvf = invokeurl
+[
+	url :"https://salesiq.zoho.com/api/v2/dmcihomes5226/conversations/" + conversationId
+	type :GET
+	connection:"sales_conn"
+];
+appId = fetchConvf.get("data").get("app_id");
+getBrand = invokeurl
+[
+	url :"https://salesiq.zoho.com/api/v2/" + screenName + "/apps/" + appId
+	type :GET
+	connection:"sales_conn"
+];
+departments = getBrand.get("data").get("departments");
+info "Department(s) involved : " + getBrand.get("data").get("departments").size();
+deptIds = List();
+for each  department in departments
+{
+	key = department.keys();
+	deptIds.add(key);
+}
+operatorIds = List();
+for each  id in deptIds
+{
+	getDepartment = invokeurl
+	[
+		url :"https://salesiq.zoho.com/api/v2/" + screenName + "/departments/" + id
+		type :GET
+		connection:"sales_conn"
+	];
+	operators = getDepartment.get("data").get("operators");
+	operatorIds.add(operators);
+}
+// -----------------------------------------------------------------------------------------------
+// Pull Active Operators
+// -----------------------------------------------------------------------------------------------
+indexVal = 1;
+activeOperators = List();
+for each  loop in loops
+{
+	param = Map();
+	param.put("index",indexVal);
+	allOperators = invokeurl
+	[
+		url :"https://salesiq.zoho.com/api/v2/" + screenName + "/operators"
+		type :GET
+		parameters:param
+		connection:"sales_conn"
+	];
+	checker = allOperators.get("data").size();
+	for each  operator in allOperators.get("data")
+	{
+		if(operator.get("status_code") == 1)
+		{
+			activeOperators.add(operator.get("id"));
+		}
+	}
+	if(checker != 20)
+	{
+		break;
+	}
+	else
+	{
+		indexVal = indexVal + 1;
+	}
+}
+// -----------------------------------------------------------------------------------------------
+// Match Brand Operators to Active Operators
+// -----------------------------------------------------------------------------------------------
+allOperators = operatorIds.toList();
+brandActiveOperators = List();
+for each  operator in activeOperators
+{
+	if(allOperators.contains(operator))
+	{
+		brandActiveOperators.add(operator);
+	}
+}
+// -----------------------------------------------------------------------------------------------
+// Pull all Active Conversations
+// -----------------------------------------------------------------------------------------------
+page = 1;
+limit = 99;
+loadBalance = Collection();
+for each  loop in loops
+{
+	param = "status=open&page=" + page + "&limit=" + limit;
+	getConversations = invokeurl
+	[
+		url :"https://salesiq.zoho.com/api/v2/" + screenName + "/conversations?" + param
+		type :GET
+		connection:"sales_conn"
+	];
+	for each  chat in getConversations.get("data")
+	{
+		if(chat.get("status") == "Connected" || chat.get("status") == "Waiting")
+		{
+			withChatOwner = false;
+			if(chat.containsKey("owner"))
+			{
+				chatOwner = chat.get("owner").get("id");
+				withChatOwner = true;
+			}
+			if(withChatOwner == true && brandActiveOperators.contains(chatOwner))
+			{
+				if(loadBalance.containsIgnoreCase(chatOwner))
+				{
+					for each  data in loadBalance
+					{
+						if(data.get("operator") == chatOwner)
+						{
+							data.update("count",data.get("count") + 1);
+							break;
+						}
+					}
+				}
+				else
+				{
+					operatorParam = Map();
+					operatorParam.put("operator",chatOwner);
+					operatorParam.put("count",1);
+					loadBalance.add(operatorParam);
+				}
+			}
+		}
+	}
+	if(getConversations.get("more_data_available") == false)
+	{
+		break;
+	}
+	else
+	{
+		page = page + 1;
+	}
+}
+// -----------------------------------------------------------------------------------------------
+// Operator with no Chats - Checker
+// -----------------------------------------------------------------------------------------------
+noAssignedOperators = List();
+noAssigned = false;
+for each  data in brandActiveOperators
+{
+	if(!loadBalance.containsValue(data))
+	{
+		noAssignedOperators.add(data);
+		noAssigned = true;
+	}
+}
+// -----------------------------------------------------------------------------------------------
+// Pull least number of Chats - Select Random Operator
+// -----------------------------------------------------------------------------------------------
+if(noAssigned == false)
+{
+	count = List();
+	for each  data in loadBalance
+	{
+		count.add(data.get("count"));
+	}
+	lowestCount = count.smallest();
+	chatRouting = List();
+	for each  data in loadBalance
+	{
+		if(data.get("count") == lowestCount)
+		{
+			chatRouting.add(data.get("operator"));
+		}
+	}
+	operatorCount = chatRouting.size() - 1;
+	random = randomNumber(0,operatorCount);
+	selectedOperator = chatRouting.get(random);
+}
+else
+{
+	operatorCount = noAssignedOperators.size() - 1;
+	random = randomNumber(0,operatorCount);
+	selectedOperator = noAssignedOperators.get(random);
+}
+// END
+// -----------------------------------------------------------------------------------------------
+KeyValue = Map();
+KeyValue.put("OperatorForwarded",selectedOperator);
+cusInfo = Map();
+cusInfo.put("customer_info",KeyValue);
+updateCustom = invokeurl
+[
+	url :"https://salesiq.zoho.com/api/v2/dmcihomes5226/conversations/" + conversationId
+	type :PUT
+	parameters:cusInfo.toText()
+	connection:"sales_conn"
+];
+response = Map();
+response.put("response",selectedOperator);
+return response;

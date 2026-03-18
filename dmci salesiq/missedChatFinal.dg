@@ -1,0 +1,63 @@
+conversationId = entity.get("id");
+url = "https://salesiq.zoho.com";
+screenName = "dmcihomes5226";
+include = "include_fields=%5B%22metrics%22%2C%20%22attender%22%2C%20%22brand%22%2C%20%22transfer_details%22%5D";
+threadMetaData = invokeurl
+[
+	url :url + "/api/v2/" + screenName + "/conversations/" + conversationId + "/threads?" + include
+	type :GET
+	connection:"salesiqreadchat"
+];
+threadList = threadMetaData.get("data");
+operatorId = "";
+validCount = 0;
+// -----------------------------------------------------------------------------------
+// STEP 1: FIND PREVIOUS OPERATOR NOT BOIT
+// -----------------------------------------------------------------------------------
+if(threadList != null && threadList.size() > 0)
+{
+	previousOperatorId = "";
+	for each  threadData in threadList
+	{
+		if(threadData.get("thread_number") == threadList.toString() && threadData.get("attender") != null)
+		{
+			if(!threadData.get("attender").get("type").containsIgnoreCase("bot"))
+			{
+				previousOperatorId = threadData.get("attender").get("id");
+				break;
+			}
+		}
+	}
+}
+// -----------------------------------------------------------------------------------
+// STEP 2: FALLBACK → SUPER ADMIN
+// -----------------------------------------------------------------------------------
+if(operatorId == "" || operatorId == null)
+{
+	operatorId = "1013795000000361001";
+	//1013795000000002002
+	// SUPER ADMIN
+}
+// -----------------------------------------------------------------------------------
+// STEP 3: ASSIGN CHAT
+// -----------------------------------------------------------------------------------
+Ids = List();
+Ids.add(conversationId);
+param = Map();
+param.put("operator_id",operatorId);
+param.put("ids",Ids);
+assignMissed = invokeurl
+[
+	url :url + "/api/v2/" + screenName + "/conversations/assign"
+	type :PUT
+	parameters:param.toString()
+	connection:"salesiqreadchat"
+];
+info assignMissed;
+// -----------------------------------------------------------------------------------
+// RESPONSE
+// -----------------------------------------------------------------------------------
+response = Map();
+response.put("status","Success");
+response.put("assigned_operator",operatorId);
+return response;

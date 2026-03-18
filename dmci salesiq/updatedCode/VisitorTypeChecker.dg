@@ -1,0 +1,19 @@
+conversationId = session.get("activeId").get("value");
+// -----------------------------------------------------------------------------------------------
+// Pull Conversation Details
+// -----------------------------------------------------------------------------------------------
+url = "https://salesiq.zoho.com";
+screenName = "dmcihomes5226";
+fetchConvf = invokeurl
+[
+	url :url + "/api/v2/" + screenName + "/conversations/" + conversationId
+	type :GET
+	connection:"salesiqreadchat"
+];
+statusKey = fetchConvf.get("data").get("chat_status").get("status_key");
+info statusKey;
+response = Map();
+response.put("response",statusKey.toText());
+return response;
+// END
+// -----------------------------------------------------------------------------------------------

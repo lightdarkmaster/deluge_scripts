@@ -1,0 +1,48 @@
+conversationId = session.get("activeId").get("value");
+// -----------------------------------------------------------------------------------------------
+// Pull Thread Details
+// -----------------------------------------------------------------------------------------------
+url = "https://salesiq.zoho.com";
+screenName = "dmcihomes5226";
+include = "include_fields=%5B%22metrics%22%2C%20%22attender%22%2C%20%22brand%22%2C%20%22transfer_details%22%5D";
+threadMetaData = invokeurl
+[
+	url :url + "/api/v2/" + screenName + "/conversations/" + conversationId + "/threads?" + include
+	type :GET
+	connection:"salesiqreadchat"
+];
+threadList = threadMetaData.get("data");
+totalThreads = threadList.size();
+previousThread = totalThreads - 1;
+info "Total Threads: " + totalThreads;
+//start
+previousOperatorId = "";
+for each  threadData in threadList
+{
+	if(threadData.get("thread_number") == previousThread.toString() && threadData.get("attender") != null)
+	{
+		if(!threadData.get("attender").get("type").containsIgnoreCase("bot"))
+		{
+			previousOperatorId = threadData.get("attender").get("id");
+			break;
+		}
+	}
+}
+// Get Operator Email
+// operatorId = "miguinto@dmcihomes.com";
+KeyValue = Map();
+KeyValue.put("OperatorForwarded",previousOperatorId);
+cusInfo = Map();
+cusInfo.put("customer_info",KeyValue);
+updateCustom = invokeurl
+[
+	url :"https://salesiq.zoho.com/api/v2/dmcihomes5226/conversations/" + conversationId
+	type :PUT
+	parameters:cusInfo.toText()
+	connection:"sales_conn"
+];
+response = Map();
+response.put("response",previousOperatorId);
+return response;
+// END
+// -----------------------------------------------------------------------------------------------

@@ -1,0 +1,65 @@
+conversationId = entity.get("id");
+url = "https://salesiq.zoho.com";
+screenName = "dmcihomes5226";
+include = "include_fields=%5B%22metrics%22%2C%20%22attender%22%2C%20%22brand%22%2C%20%22transfer_details%22%5D";
+threadMetaData = invokeurl
+[
+	url :url + "/api/v2/" + screenName + "/conversations/" + conversationId + "/threads?" + include
+	type :GET
+	connection:"salesiqreadchat"
+];
+if(threadMetaData.get("data").size() > 1)
+{
+	for each  threadData in threadMetaData.get("data")
+	{
+		previousOperator = threadMetaData.get("data").size() - 1;
+		if(threadData.get("thread_number") == previousOperator)
+		{
+			operatorId = threadData.get("attender").get("id");
+			info operatorId;
+			Ids = List();
+			Ids.add(conversationId);
+			param = Map();
+			param.put("operator_id",operatorId);
+			param.put("ids",Ids.toList());
+			assignMissed = invokeurl
+			[
+				url :url + "/api/v2/" + screenName + "/conversations/assign"
+				type :PUT
+				parameters:param.toText()
+				connection:"salesiqreadchat"
+			];
+			info assignMissed;
+		}
+	}
+}
+else
+{
+	operatorsInvolved = threadMetaData.get("data").get(0).get("operators_involved");
+	for each  operatorInvolved in operatorsInvolved
+	{
+		if(operatorInvolved != 1013795000001687675)
+		{
+			operatorId = operatorInvolved;
+			break;
+		}
+	}
+	Ids = List();
+	Ids.add(conversationId);
+	param = Map();
+	param.put("operator_id",operatorId);
+	param.put("ids",Ids.toList());
+	assignMissed = invokeurl
+	[
+		url :url + "/api/v2/" + screenName + "/conversations/assign"
+		type :PUT
+		parameters:param.toText()
+		connection:"salesiqreadchat"
+	];
+	// 	pushPayload1 = zoho.crm.updateRecord("Leads","6715488000021464393",{"payload":assignMissed});
+	pushPayload2 = zoho.crm.updateRecord("Leads","6715488000021464393",{"payload_2":entity});
+}
+response = Map();
+response.put("status","Success");
+response.put("message","Workflow executed");
+return response;
