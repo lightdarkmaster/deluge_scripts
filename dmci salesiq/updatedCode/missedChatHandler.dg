@@ -1,0 +1,26 @@
+conversationId = entity.get("id");
+url = "https://salesiq.zoho.com";
+screenName = "dmcihomes5226";
+getConv = invokeurl
+[
+	url :url + "/api/v2/" + screenName + "/conversations/" + conversationId
+	type :GET
+	connection:"salesiqreadchat"
+];
+forwardedOperator = getConv.get("customer_info").get("OperatorForwarded");
+Ids = List();
+Ids.add(conversationId);
+param = Map();
+param.put("operator_id",forwardedOperator.toNumber());
+param.put("ids",Ids.toList());
+assignMissed = invokeurl
+[
+	url :url + "/api/v2/" + screenName + "/conversations/assign"
+	type :PUT
+	parameters:param.toText()
+	connection:"salesiqreadchat"
+];
+response = Map();
+response.put("status","Success");
+response.put("message","Workflow executed");
+return response;
