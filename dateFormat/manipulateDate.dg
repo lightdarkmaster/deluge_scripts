@@ -1,0 +1,17 @@
+string standalone.ManipulateDate(String leadID)
+{
+    leadDetails = zoho.crm.getRecordById("Leads", leadID);
+    rawDate = leadDetails.get("NDA_Sent_Date");
+
+    if(rawDate != null){
+        formattedDate = rawDate.toString("yyyy-MM-dd HH:mm:ss");
+        info "Original " + rawDate;
+        info "Formatted " + formattedDate;
+        
+        leadMap = Map();
+        leadMap.put("NDA_Sent_Date", formattedDate);
+        updateResponse = zoho.crm.updateRecord("Leads", leadID, leadMap);
+        return updateResponse;
+    }
+    return " No Date Found";
+}
