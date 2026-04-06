@@ -22,6 +22,17 @@ void automation(Int Id)
             {
                 info relatedRecord;
                 // Process the related record
+                // For example, get the custom field values
+                List<Map> customFields = relatedRecord.get("Custom_Fields");
+                if (customFields != null)
+                {
+                    foreach(Map customField in customFields)
+                    {
+                        String customFieldName = customField.get("api_name");
+                        String customFieldValue = customField.get("value");
+                        info "Custom field " + customFieldName + " has value " + customFieldValue;
+                    }
+                }
             }
             else
             {
@@ -33,5 +44,4 @@ void automation(Int Id)
     {
         info "No related records found";
     }
-}
 
