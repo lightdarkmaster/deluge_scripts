@@ -1,28 +1,32 @@
+/**
+ * Retrieves related records for a given ID and processes the data.
+ * 
+ * @param Id The ID of the parent record.
+ */
 void automation(Int Id)
 {
-    //get data from other modules
-    record = zoho.crm.getRelatedRecords("RelatedList", "Parent_module", Id);
+    // Get related records for the given ID
+    List<Map> record = zoho.crm.getRelatedRecords("RelatedList", "Parent_module", Id);
     info record;
 
     if(!record.isEmpty())
     {
-        //process the data
-        foreach(rel in record)
+        // Process the related records
+        foreach(Map rel in record)
         {
             info rel;
             String relatedId = rel.get("id");
             String relatedName = rel.get("name");
             String relatedModule = rel.get("module");
 
-            // Perform additional processing on the related record
-            // For example, get the related record by ID
+            // Get the related record by ID
             Map relatedRecord = zoho.crm.getRecordById(relatedModule, relatedId);
 
             if(relatedRecord != null)
             {
                 info relatedRecord;
                 // Process the related record
-                // For example, get the custom field values
+                // Get the custom field values
                 List<Map> customFields = relatedRecord.get("Custom_Fields");
                 if (customFields != null)
                 {
@@ -45,3 +49,4 @@ void automation(Int Id)
         info "No related records found";
     }
 }
+
