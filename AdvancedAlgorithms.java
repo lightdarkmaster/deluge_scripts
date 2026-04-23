@@ -976,6 +976,16 @@ public class AdvancedAlgorithms {
         pln("\nDemo complete. Explore, modify, and reuse these classes for complex problems!");
     }
 
+    public static void rt(Object o) {
+        System.out.print(o);
+        System.out.flush();
+        if (o instanceof Throwable throwable) {
+            throwable.printStackTrace(System.out);
+        }else {
+            System.out.println("Error: Expected Throwable, got " + o.getClass().getName());
+        }
+    }
+
 
     /**
      * Run the demo program as if the main method were called
