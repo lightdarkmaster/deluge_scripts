@@ -1,0 +1,54 @@
+void automation(int id)
+{
+    // Get related records for the given ID
+    List<Map> record = zoho.crm.getRelatedRecords("RelatedList", "Parent_module", Id);
+    info record;
+
+    if(!record.isEmpty())
+    {
+        // Process the related records
+        foreach(Map rel in record)
+        {
+            info rel;
+            String relatedId = rel.get("id");
+            String relatedName = rel.get("name");
+            String relatedModule = rel.get("module");
+
+            // Get the related record by ID
+            Map relatedRecord = zoho.crm.getRecordById(relatedModule, relatedId);
+
+            if(relatedRecord != null)
+            {
+                info relatedRecord;
+                // Process the related record
+                // Get the custom field values
+                List<Map> customFields = relatedRecord.get("Custom_Fields");
+                if (customFields != null)
+                {
+                    foreach(Map customField in customFields)
+                    {
+                        String customFieldName = customField.get("api_name");
+                        String customFieldValue = customField.get("value");
+                        info "Custom field " + customFieldName + " has value " + customFieldValue;
+                    }
+                }
+            }
+            else
+            {
+                info "Related record not found for ID: " + relatedId;
+            }
+        }
+    }
+    else
+    {
+        info "No related records found";
+    }
+
+    try{
+
+    }catch(e){
+        info "Error : " + e.message;
+        info "Erro type : " + e.type;
+    }
+}
+
