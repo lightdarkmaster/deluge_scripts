@@ -12,7 +12,7 @@ function changeVowels() {
 function changeBgColor() {
     const testArea = document.getElementById("testArea");
 
-    testArea.style.backgroundColor = "orange";
+    testArea.style.backgroundColor = "lightgreen";
 }
 
 function changeHeader() {
